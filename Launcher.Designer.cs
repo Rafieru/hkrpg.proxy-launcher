@@ -49,6 +49,7 @@ namespace hkrpg.proxy
             ipLabel = new Label();
             portLabel = new Label();
             logLabel = new Label();
+            enableDebugLogsCheckBox = new CheckBox();
             SuspendLayout();
             // 
             // _processCheckTimer
@@ -59,14 +60,16 @@ namespace hkrpg.proxy
             // gamePathBox
             // 
             gamePathBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gamePathBox.Font = new Font("Consolas", 9F);
             gamePathBox.Location = new Point(20, 40);
             gamePathBox.Name = "gamePathBox";
-            gamePathBox.Size = new Size(350, 23);
+            gamePathBox.Size = new Size(350, 22);
             gamePathBox.TabIndex = 0;
             // 
             // browseButton
             // 
             browseButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            browseButton.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             browseButton.Location = new Point(382, 40);
             browseButton.Name = "browseButton";
             browseButton.Size = new Size(80, 23);
@@ -79,35 +82,39 @@ namespace hkrpg.proxy
             localhostCheckBox.AutoSize = true;
             localhostCheckBox.Checked = true;
             localhostCheckBox.CheckState = CheckState.Checked;
+            localhostCheckBox.Font = new Font("Consolas", 9F);
             localhostCheckBox.Location = new Point(20, 80);
             localhostCheckBox.Name = "localhostCheckBox";
-            localhostCheckBox.Size = new Size(155, 19);
+            localhostCheckBox.Size = new Size(201, 18);
             localhostCheckBox.TabIndex = 2;
             localhostCheckBox.Text = "Use Localhost (127.0.0.1)";
             localhostCheckBox.CheckedChanged += LocalhostCheckBox_CheckedChanged;
             // 
             // ipBox
             // 
+            ipBox.Font = new Font("Consolas", 9F);
             ipBox.Location = new Point(20, 130);
             ipBox.Name = "ipBox";
-            ipBox.Size = new Size(150, 23);
+            ipBox.Size = new Size(150, 22);
             ipBox.TabIndex = 3;
             // 
             // portBox
             // 
+            portBox.Font = new Font("Consolas", 9F);
             portBox.Location = new Point(190, 130);
             portBox.Name = "portBox";
-            portBox.Size = new Size(100, 23);
+            portBox.Size = new Size(100, 22);
             portBox.TabIndex = 4;
             // 
             // statusLabel
             // 
             statusLabel.AutoSize = true;
+            statusLabel.Font = new Font("Consolas", 9F);
             statusLabel.Location = new Point(20, 210);
             statusLabel.Name = "statusLabel";
-            statusLabel.Size = new Size(128, 15);
+            statusLabel.Size = new Size(175, 14);
             statusLabel.TabIndex = 5;
-            statusLabel.Text = "Ready: Proxy Initialized";
+            statusLabel.Text = "Ready";
             // 
             // logBox
             // 
@@ -126,6 +133,7 @@ namespace hkrpg.proxy
             // 
             // launchButton
             // 
+            launchButton.Font = new Font("Consolas", 9F);
             launchButton.Location = new Point(20, 170);
             launchButton.Name = "launchButton";
             launchButton.Size = new Size(100, 30);
@@ -136,6 +144,7 @@ namespace hkrpg.proxy
             // stopButton
             // 
             stopButton.Enabled = false;
+            stopButton.Font = new Font("Consolas", 9F);
             stopButton.Location = new Point(130, 170);
             stopButton.Name = "stopButton";
             stopButton.Size = new Size(100, 30);
@@ -145,6 +154,7 @@ namespace hkrpg.proxy
             // 
             // saveButton
             // 
+            saveButton.Font = new Font("Consolas", 9F);
             saveButton.Location = new Point(300, 130);
             saveButton.Name = "saveButton";
             saveButton.Size = new Size(100, 23);
@@ -154,6 +164,7 @@ namespace hkrpg.proxy
             // 
             // startServerButton
             // 
+            startServerButton.Font = new Font("Consolas", 9F);
             startServerButton.Location = new Point(240, 170);
             startServerButton.Name = "startServerButton";
             startServerButton.Size = new Size(100, 30);
@@ -165,9 +176,10 @@ namespace hkrpg.proxy
             // serverStatusLabel
             // 
             serverStatusLabel.AutoSize = true;
+            serverStatusLabel.Font = new Font("Consolas", 9F);
             serverStatusLabel.Location = new Point(240, 210);
             serverStatusLabel.Name = "serverStatusLabel";
-            serverStatusLabel.Size = new Size(89, 15);
+            serverStatusLabel.Size = new Size(112, 14);
             serverStatusLabel.TabIndex = 11;
             serverStatusLabel.Text = "Server: Stopped";
             serverStatusLabel.Visible = false;
@@ -175,49 +187,67 @@ namespace hkrpg.proxy
             // enableLogsCheckBox
             // 
             enableLogsCheckBox.AutoSize = true;
+            enableLogsCheckBox.Font = new Font("Consolas", 9F);
             enableLogsCheckBox.Location = new Point(20, 240);
             enableLogsCheckBox.Name = "enableLogsCheckBox";
-            enableLogsCheckBox.Size = new Size(154, 19);
+            enableLogsCheckBox.Size = new Size(103, 18);
             enableLogsCheckBox.TabIndex = 12;
-            enableLogsCheckBox.Text = "Enable Connection Logs";
+            enableLogsCheckBox.Text = "Enable Logs";
             enableLogsCheckBox.CheckedChanged += EnableLogsCheckBox_CheckedChanged;
             // 
             // gamePathLabel
             // 
             gamePathLabel.AutoSize = true;
+            gamePathLabel.Font = new Font("Consolas", 9F);
             gamePathLabel.Location = new Point(20, 20);
             gamePathLabel.Name = "gamePathLabel";
-            gamePathLabel.Size = new Size(68, 15);
+            gamePathLabel.Size = new Size(77, 14);
             gamePathLabel.TabIndex = 13;
             gamePathLabel.Text = "Game Path:";
             // 
             // ipLabel
             // 
             ipLabel.AutoSize = true;
+            ipLabel.Font = new Font("Consolas", 9F);
             ipLabel.Location = new Point(20, 110);
             ipLabel.Name = "ipLabel";
-            ipLabel.Size = new Size(65, 15);
+            ipLabel.Size = new Size(84, 14);
             ipLabel.TabIndex = 14;
             ipLabel.Text = "IP Address:";
             // 
             // portLabel
             // 
             portLabel.AutoSize = true;
+            portLabel.Font = new Font("Consolas", 9F);
             portLabel.Location = new Point(190, 110);
             portLabel.Name = "portLabel";
-            portLabel.Size = new Size(32, 15);
+            portLabel.Size = new Size(42, 14);
             portLabel.TabIndex = 15;
             portLabel.Text = "Port:";
             // 
             // logLabel
             // 
             logLabel.AutoSize = true;
+            logLabel.Font = new Font("Consolas", 9F);
             logLabel.Location = new Point(20, 262);
             logLabel.Name = "logLabel";
-            logLabel.Size = new Size(95, 15);
+            logLabel.Size = new Size(42, 14);
             logLabel.TabIndex = 16;
-            logLabel.Text = "Connection Log:";
+            logLabel.Text = "Logs:";
             logLabel.Visible = false;
+            // 
+            // enableDebugLogsCheckBox
+            // 
+            enableDebugLogsCheckBox.AutoSize = true;
+            enableDebugLogsCheckBox.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            enableDebugLogsCheckBox.ForeColor = Color.Brown;
+            enableDebugLogsCheckBox.Location = new Point(130, 239);
+            enableDebugLogsCheckBox.Name = "enableDebugLogsCheckBox";
+            enableDebugLogsCheckBox.Size = new Size(243, 18);
+            enableDebugLogsCheckBox.TabIndex = 12;
+            enableDebugLogsCheckBox.Text = "Show Debug Logs (For Developer)";
+            enableDebugLogsCheckBox.UseVisualStyleBackColor = true;
+            enableDebugLogsCheckBox.CheckedChanged += EnableDebugLogsCheckBox_CheckedChanged;
             // 
             // Launcher
             // 
@@ -241,6 +271,7 @@ namespace hkrpg.proxy
             Controls.Add(localhostCheckBox);
             Controls.Add(browseButton);
             Controls.Add(gamePathBox);
+            Controls.Add(enableDebugLogsCheckBox);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(500, 430);
             Name = "Launcher";
@@ -268,5 +299,6 @@ namespace hkrpg.proxy
         private System.Windows.Forms.Label ipLabel;
         private System.Windows.Forms.Label portLabel;
         private System.Windows.Forms.Label logLabel;
+        private System.Windows.Forms.CheckBox enableDebugLogsCheckBox;
     }
 } 

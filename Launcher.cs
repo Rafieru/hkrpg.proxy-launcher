@@ -21,16 +21,19 @@ namespace hkrpg.proxy
         private Process? _sdkServerProcess;
         private ProxyService? proxyService;
         private string lastIpAddress = "127.0.0.1";
+        private IniFile _config;
 
         public Launcher()
         {
             InitializeComponent();
+            _config = new IniFile(Path.Combine(Application.StartupPath, "launcher.ini"));
             LoadSettings();
             InitializeProcessCheckTimer();
         }
 
         private enum LogLevel
         {
+            DEBUG,
             INFO,
             WARN,
             ERROR,
@@ -54,29 +57,35 @@ namespace hkrpg.proxy
 
         private void LoadSettings()
         {
-            if (Settings.Default.GamePath != null)
-            {
-                gamePathBox.Text = Settings.Default.GamePath;
-            }
+            // Load settings from INI file
+            gamePathBox.Text = _config.Read("Settings", "GamePath", "");
+            ipBox.Text = _config.Read("Settings", "DestinationHost", "127.0.0.1");
+            portBox.Text = _config.Read("Settings", "DestinationPort", "21000");
 
-            ipBox.Text = Settings.Default.DestinationHost;
-            portBox.Text = Settings.Default.DestinationPort.ToString();
             UpdateIpBoxState();
             UpdateServerVisibility();
+
+            // Hide debug logs checkbox by default
+            enableDebugLogsCheckBox.Visible = false;
+            enableDebugLogsCheckBox.Checked = false;
         }
 
         private void SaveSettings(bool logSave = true)
         {
-            Settings.Default.GamePath = gamePathBox.Text;
-            Settings.Default.DestinationHost = ipBox.Text;
-            if (int.TryParse(portBox.Text, out int port))
+            try
             {
-                Settings.Default.DestinationPort = port;
+                _config.Write("Settings", "GamePath", gamePathBox.Text);
+                _config.Write("Settings", "DestinationHost", ipBox.Text);
+                _config.Write("Settings", "DestinationPort", portBox.Text);
+
+                if (logSave)
+                {
+                    Log("Settings saved", LogLevel.INFO);
+                }
             }
-            Settings.Default.Save();
-            if (logSave)
+            catch (Exception ex)
             {
-                Log("Settings saved", LogLevel.INFO);
+                Log($"Error saving settings: {ex.Message}", LogLevel.ERROR);
             }
         }
 
@@ -95,35 +104,40 @@ namespace hkrpg.proxy
             {
                 if (_gameProcess != null)
                 {
-                    // Add a small grace period after process start
-                    if (_gameProcess.StartTime.AddSeconds(2) > DateTime.Now)
-                    {
-                        return;  // Skip check if process just started
-                    }
-
                     try
                     {
-                        // Try to get process by ID to check if it still exists
-                        Process.GetProcessById(_gameProcess.Id);
-                        try
-                        {
-                            gameExited = _gameProcess.HasExited;
-                        }
-                        catch
+                        // First check if the process exists by ID
+                        if (!ProcessExists(_gameProcess.Id))
                         {
                             gameExited = true;
+                            Log("Game process not found by ID", LogLevel.DEBUG);
+                        }
+                        else
+                        {
+                            // If process exists, check if it has exited
+                            try
+                            {
+                                gameExited = _gameProcess.HasExited;
+                                Log($"Game process check: HasExited={gameExited}", LogLevel.DEBUG);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                gameExited = true;
+                                Log("Game process check failed with InvalidOperationException", LogLevel.DEBUG);
+                            }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Process not found by ID, meaning it's closed
+                        Log($"Game process check error: {ex.Message}", LogLevel.DEBUG);
                         gameExited = true;
                     }
 
                     if (gameExited)
                     {
+                        Log("Game process marked as exited, cleaning up", LogLevel.DEBUG);
                         _gameProcess = null;
-                        Log("[SYSTEM] Client disconnected", LogLevel.INFO);
+                        Log("Client disconnected", LogLevel.INFO);
                         
                         if (InvokeRequired)
                         {
@@ -140,19 +154,39 @@ namespace hkrpg.proxy
                     }
                 }
 
+                // Check server process independently of game process
                 if (_serverProcess != null)
                 {
                     try
                     {
-                        serverExited = _serverProcess.HasExited;
+                        if (!ProcessExists(_serverProcess.Id))
+                        {
+                            serverExited = true;
+                            Log("Server process not found by ID", LogLevel.DEBUG);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                serverExited = _serverProcess.HasExited;
+                                Log($"Server process check: HasExited={serverExited}", LogLevel.DEBUG);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                serverExited = true;
+                                Log("Server process check failed with InvalidOperationException", LogLevel.DEBUG);
+                            }
+                        }
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception ex)
                     {
+                        Log($"Server process check error: {ex.Message}", LogLevel.DEBUG);
                         serverExited = true;
                     }
 
                     if (serverExited)
                     {
+                        Log("Server process marked as exited, cleaning up", LogLevel.DEBUG);
                         _serverProcess = null;
                         serverStatusLabel?.Invoke((MethodInvoker)delegate
                         {
@@ -165,44 +199,57 @@ namespace hkrpg.proxy
                 {
                     try
                     {
-                        sdkServerExited = _sdkServerProcess.HasExited;
+                        if (!ProcessExists(_sdkServerProcess.Id))
+                        {
+                            sdkServerExited = true;
+                            Log("SDK Server process not found by ID", LogLevel.DEBUG);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                sdkServerExited = _sdkServerProcess.HasExited;
+                                Log($"SDK Server process check: HasExited={sdkServerExited}", LogLevel.DEBUG);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                sdkServerExited = true;
+                                Log("SDK Server process check failed with InvalidOperationException", LogLevel.DEBUG);
+                            }
+                        }
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception ex)
                     {
+                        Log($"SDK Server process check error: {ex.Message}", LogLevel.DEBUG);
                         sdkServerExited = true;
                     }
 
                     if (sdkServerExited)
                     {
+                        Log("SDK Server process marked as exited, cleaning up", LogLevel.DEBUG);
                         _sdkServerProcess = null;
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // If any other unexpected error occurs, assume everything has stopped
-                _gameProcess = null;
-                _serverProcess = null;
-                _sdkServerProcess = null;
+                Log($"Unexpected error in process check: {ex.GetType().Name} - {ex.Message}", LogLevel.DEBUG);
+                Log($"Stack trace: {ex.StackTrace}", LogLevel.DEBUG);
+            }
+        }
 
-                if (InvokeRequired)
+        private bool ProcessExists(int processId)
+        {
+            try
+            {
+                using (var process = Process.GetProcessById(processId))
                 {
-                    Invoke(new Action(() => UpdateUIState(false)));
+                    return true;
                 }
-                else
-                {
-                    UpdateUIState(false);
-                }
-
-                statusLabel?.Invoke((MethodInvoker)delegate
-                {
-                    statusLabel.Text = "Game stopped";
-                });
-
-                serverStatusLabel?.Invoke((MethodInvoker)delegate
-                {
-                    serverStatusLabel.Text = "Server: Stopped";
-                });
+            }
+            catch (ArgumentException)
+            {
+                return false;
             }
         }
 
@@ -225,17 +272,29 @@ namespace hkrpg.proxy
                 return;
             }
 
-            launchButton.Enabled = !isRunning;
-            stopButton.Enabled = isRunning;
-            gamePathBox.Enabled = !isRunning;
-            browseButton.Enabled = !isRunning;
-            ipBox.Enabled = !isRunning && !localhostCheckBox.Checked;
-            portBox.Enabled = !isRunning;
-            saveButton.Enabled = !isRunning;
-            localhostCheckBox.Enabled = !isRunning;
-            enableLogsCheckBox.Enabled = !isRunning;
-            startServerButton.Enabled = true;
-            statusLabel.Text = isRunning ? "Game and proxy running" : "Ready";
+            try
+            {
+                Log($"Updating UI state: isRunning={isRunning}", LogLevel.DEBUG);
+                
+                launchButton.Enabled = !isRunning;
+                stopButton.Enabled = isRunning;
+                gamePathBox.Enabled = !isRunning;
+                browseButton.Enabled = !isRunning;
+                ipBox.Enabled = !isRunning && !localhostCheckBox.Checked;
+                portBox.Enabled = !isRunning;
+                saveButton.Enabled = !isRunning;
+                localhostCheckBox.Enabled = !isRunning;
+                enableLogsCheckBox.Enabled = !isRunning;
+                startServerButton.Enabled = true;
+                
+                statusLabel.Text = isRunning ? "Game and proxy running" : "Ready";
+                
+                Log("UI state update completed", LogLevel.DEBUG);
+            }
+            catch (Exception ex)
+            {
+                Log($"UI state update failed: {ex.Message}", LogLevel.DEBUG);
+            }
         }
 
         private void BrowseButton_Click(object? sender, EventArgs e)
@@ -257,7 +316,15 @@ namespace hkrpg.proxy
         {
             try
             {
+                Log("Starting the Game", LogLevel.INFO);
+                
+                // Stop the process check timer during launch
+                _processCheckTimer?.Stop();
+                
+                // Initialize proxy first
                 InitializeProxy();
+                
+                // Create and start game process
                 _gameProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
@@ -266,14 +333,59 @@ namespace hkrpg.proxy
                         UseShellExecute = true
                     }
                 };
+                
+                Log("Starting game process", LogLevel.DEBUG);
                 _gameProcess.Start();
-                statusLabel.Text = "Game started";
-                SaveSettings(false);  // Don't log when launching
-                UpdateUIState(true);
+
+                // Wait a short time for the process to start
+                Thread.Sleep(1000);
+
+                // Verify the process is actually running
+                if (_gameProcess.HasExited)
+                {
+                    throw new Exception("Game process exited immediately after starting");
+                }
+
+                // Update UI state
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => UpdateUIState(true)));
+                }
+                else
+                {
+                    UpdateUIState(true);
+                }
+                
+                statusLabel?.Invoke((MethodInvoker)delegate
+                {
+                    statusLabel.Text = "Game started";
+                });
+                
+                // Save settings without logging
+                SaveSettings(false);
+                
+                // Restart the process check timer
+                _processCheckTimer?.Start();
+                
+                Log("Game launch completed successfully", LogLevel.DEBUG);
             }
             catch (Exception ex)
             {
+                Log($"Game launch failed: {ex.Message}", LogLevel.DEBUG);
                 MessageBox.Show($"Failed to start game: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                // Reset UI state on failure
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => UpdateUIState(false)));
+                }
+                else
+                {
+                    UpdateUIState(false);
+                }
+                
+                // Restart the process check timer even on failure
+                _processCheckTimer?.Start();
             }
         }
 
@@ -360,14 +472,28 @@ namespace hkrpg.proxy
 
             logLabel.Visible = showLogs;
             logBox.Visible = showLogs;
+            enableDebugLogsCheckBox.Visible = showLogs;
 
             if (showLogs)
             {
                 Log("Connection logging enabled", LogLevel.INFO);
+                // Clear debug logs checkbox when enabling logs
+                enableDebugLogsCheckBox.Checked = false;
             }
             else
             {
                 logBox.Clear();
+                // Hide and uncheck debug logs when disabling logs
+                enableDebugLogsCheckBox.Visible = false;
+                enableDebugLogsCheckBox.Checked = false;
+            }
+        }
+
+        private void EnableDebugLogsCheckBox_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (enableDebugLogsCheckBox.Checked)
+            {
+                Log("Debug logging enabled", LogLevel.INFO);
             }
         }
 
@@ -375,9 +501,11 @@ namespace hkrpg.proxy
         {
             try
             {
+                Log("Starting server process", LogLevel.DEBUG);
                 string serverPath = Path.Combine(Application.StartupPath, "server.exe");
                 if (File.Exists(serverPath))
                 {
+                    Log($"Found single server executable: {serverPath}", LogLevel.DEBUG);
                     StartSingleServer(serverPath);
                     return;
                 }
@@ -387,6 +515,7 @@ namespace hkrpg.proxy
 
                 if (File.Exists(gameServerPath) && File.Exists(sdkServerPath))
                 {
+                    Log($"Found dual server executables: {gameServerPath}, {sdkServerPath}", LogLevel.DEBUG);
                     StartDualServers(gameServerPath, sdkServerPath);
                     return;
                 }
@@ -394,15 +523,18 @@ namespace hkrpg.proxy
                 string[] jarFiles = Directory.GetFiles(Application.StartupPath, "*.jar");
                 if (jarFiles.Length > 0)
                 {
+                    Log($"Found JAR file: {jarFiles[0]}", LogLevel.DEBUG);
                     StartSingleServer(jarFiles[0]);
                     return;
                 }
 
+                Log("No valid server executables found", LogLevel.DEBUG);
                 MessageBox.Show("No valid server executables found. Please make sure server files are in the same directory.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
+                Log($"Error starting server: {ex.Message}", LogLevel.DEBUG);
                 MessageBox.Show($"Failed to start server: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Log($"Server start error: {ex.Message}", LogLevel.ERROR);
             }
@@ -410,6 +542,7 @@ namespace hkrpg.proxy
 
         private void StartSingleServer(string serverPath)
         {
+            Log($"Starting single server: {serverPath}", LogLevel.DEBUG);
             ProcessStartInfo startInfo;
             if (serverPath.EndsWith(".jar"))
             {
@@ -421,6 +554,7 @@ namespace hkrpg.proxy
                     CreateNoWindow = false,
                     WindowStyle = ProcessWindowStyle.Normal
                 };
+                Log("Starting JAR server with Java", LogLevel.DEBUG);
             }
             else
             {
@@ -431,6 +565,7 @@ namespace hkrpg.proxy
                     CreateNoWindow = false,
                     WindowStyle = ProcessWindowStyle.Normal
                 };
+                Log("Starting native server executable", LogLevel.DEBUG);
             }
 
             // Set launcher to be topmost temporarily
@@ -442,6 +577,7 @@ namespace hkrpg.proxy
             _serverProcess.EnableRaisingEvents = true;
             _serverProcess.Exited += ServerProcess_Exited;
             _serverProcess.Start();
+            Log($"Server process started with ID: {_serverProcess.Id}", LogLevel.DEBUG);
 
             // Reset topmost state after a short delay
             Task.Delay(500).ContinueWith(t => 
@@ -547,22 +683,33 @@ namespace hkrpg.proxy
 
         private void ServerProcess_Exited(object? sender, EventArgs e)
         {
+            Log("Server process exited event received", LogLevel.DEBUG);
             if (InvokeRequired)
             {
                 Invoke(new Action(() => ServerProcess_Exited(sender, e)));
                 return;
             }
 
-            StopServer();
-            Log("Server process exited", LogLevel.INFO);
+            // Only stop the server if it's the actual process that exited
+            if (sender is Process process && process == _serverProcess)
+            {
+                StopServer();
+                Log("Server process exited", LogLevel.INFO);
+            }
         }
 
         private async Task OnBeforeRequest(object sender, SessionEventArgs e)
         {
             try
             {
-                string url = e.HttpClient.Request.Url;
-                string method = e.HttpClient.Request.Method;
+                string? url = e.HttpClient.Request.Url;
+                string? method = e.HttpClient.Request.Method;
+
+                if (url == null || method == null)
+                {
+                    await Task.Run(() => Log($"Received request with null {(url == null ? "URL" : "Method")}", LogLevel.WARN));
+                    return;
+                }
 
                 string formattedUrl = url;
                 if (url.Length > 80)
@@ -573,7 +720,10 @@ namespace hkrpg.proxy
                 string logMessage = $"[{method}] {formattedUrl}";
                 await Task.Run(() => Log(logMessage, LogLevel.HTTP));
             }
-            catch { }
+            catch (Exception ex)
+            {
+                await Task.Run(() => Log($"Error in OnBeforeRequest: {ex.Message}", LogLevel.ERROR));
+            }
         }
 
         private async Task OnCertificateValidationAsync(object sender, CertificateValidationEventArgs e)
@@ -595,9 +745,16 @@ namespace hkrpg.proxy
                 return;
             }
 
+            // Skip debug logs if debug logging is disabled
+            if (level == LogLevel.DEBUG && !enableDebugLogsCheckBox.Checked)
+            {
+                return;
+            }
+
             string timestamp = DateTime.Now.ToString("HH:mm:ss");
             string levelTag = level switch
             {
+                LogLevel.DEBUG => "[DEBUG]",
                 LogLevel.INFO => "[INFO]",
                 LogLevel.WARN => "[WARN]",
                 LogLevel.ERROR => "[ERROR]",
@@ -621,6 +778,7 @@ namespace hkrpg.proxy
             logBox.Select(start, length);
             logBox.SelectionColor = level switch
             {
+                LogLevel.DEBUG => Color.Gray,
                 LogLevel.INFO => Color.Green,
                 LogLevel.WARN => Color.Orange,
                 LogLevel.ERROR => Color.Red,

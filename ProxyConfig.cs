@@ -1,8 +1,8 @@
-using System.Text.Json.Serialization;
+using System.Net;
+using System.Net.Sockets;
 
 namespace hkrpg.proxy;
 
-[JsonConverter(typeof(ProxyConfigJsonConverter))]
 public class ProxyConfig
 {
     // Hardcoded redirect domains
@@ -65,6 +65,20 @@ public class ProxyConfig
     // User configurable settings
     public required string DestinationHost { get; set; }
     public required int DestinationPort { get; set; }
-    public int ProxyBindPort { get; set; }
+    public int ProxyBindPort { get; set; } = GetRandomAvailablePort();
     public string? LastGamePath { get; set; }
+
+    private static int GetRandomAvailablePort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        try
+        {
+            listener.Start();
+            return ((IPEndPoint)listener.LocalEndpoint).Port;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
 }
