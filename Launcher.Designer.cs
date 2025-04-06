@@ -30,6 +30,7 @@ namespace hkrpg.proxy
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Launcher));
             _processCheckTimer = new System.Windows.Forms.Timer(components);
             gamePathBox = new TextBox();
             browseButton = new Button();
@@ -37,7 +38,7 @@ namespace hkrpg.proxy
             ipBox = new TextBox();
             portBox = new TextBox();
             statusLabel = new Label();
-            logBox = new TextBox();
+            logBox = new RichTextBox();
             launchButton = new Button();
             stopButton = new Button();
             saveButton = new Button();
@@ -66,7 +67,7 @@ namespace hkrpg.proxy
             // browseButton
             // 
             browseButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            browseButton.Location = new Point(380, 40);
+            browseButton.Location = new Point(382, 40);
             browseButton.Name = "browseButton";
             browseButton.Size = new Size(80, 23);
             browseButton.TabIndex = 1;
@@ -113,15 +114,15 @@ namespace hkrpg.proxy
             logBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             logBox.BackColor = Color.White;
             logBox.Font = new Font("Consolas", 9F);
-            logBox.Location = new Point(20, 281);
-            logBox.Multiline = true;
+            logBox.ForeColor = Color.White;
+            logBox.Location = new Point(20, 284);
             logBox.Name = "logBox";
             logBox.ReadOnly = true;
-            logBox.ScrollBars = ScrollBars.Vertical;
-            logBox.Size = new Size(440, 142);
+            logBox.ScrollBars = RichTextBoxScrollBars.Vertical;
+            logBox.Size = new Size(442, 139);
             logBox.TabIndex = 6;
+            logBox.Text = "";
             logBox.Visible = false;
-            logBox.TextChanged += logBox_TextChanged;
             // 
             // launchButton
             // 
@@ -211,7 +212,7 @@ namespace hkrpg.proxy
             // logLabel
             // 
             logLabel.AutoSize = true;
-            logLabel.Location = new Point(19, 262);
+            logLabel.Location = new Point(20, 262);
             logLabel.Name = "logLabel";
             logLabel.Size = new Size(95, 15);
             logLabel.TabIndex = 16;
@@ -240,10 +241,10 @@ namespace hkrpg.proxy
             Controls.Add(localhostCheckBox);
             Controls.Add(browseButton);
             Controls.Add(gamePathBox);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(500, 430);
             Name = "Launcher";
-            Text = "HKRPG Launcher";
-            Load += Launcher_Load;
+            Text = "HKRPG.Proxy Launcher";
             ResumeLayout(false);
             PerformLayout();
         }
@@ -256,7 +257,7 @@ namespace hkrpg.proxy
         private System.Windows.Forms.TextBox ipBox;
         private System.Windows.Forms.TextBox portBox;
         private System.Windows.Forms.Label statusLabel;
-        private System.Windows.Forms.TextBox logBox;
+        private System.Windows.Forms.RichTextBox logBox;
         private System.Windows.Forms.Button launchButton;
         private System.Windows.Forms.Button stopButton;
         private System.Windows.Forms.Button saveButton;

@@ -13,6 +13,7 @@
     <Version>2.0.0</Version>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>hkrpg.proxy-launcher</AssemblyName>
+    <ApplicationIcon>sw.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
