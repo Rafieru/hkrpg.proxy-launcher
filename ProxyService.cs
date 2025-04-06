@@ -1,4 +1,4 @@
-﻿namespace FireflySR.Tool.Proxy
+﻿namespace hkrpg.proxy
 {
     using System;
     using System.Net;
@@ -15,6 +15,8 @@
         private readonly ProxyServer _webProxyServer;
         private readonly string _targetRedirectHost;
         private readonly int _targetRedirectPort;
+
+        public ProxyServer ProxyServer => _webProxyServer;
 
         public ProxyService(string targetRedirectHost, int targetRedirectPort, ProxyConfig conf)
         {
@@ -41,8 +43,16 @@
 
             if (OperatingSystem.IsWindows())
             {
-                _webProxyServer.SetAsSystemHttpProxy(explicitEP);
-                _webProxyServer.SetAsSystemHttpsProxy(explicitEP);
+                try
+                {
+                    _webProxyServer.SetAsSystemHttpProxy(explicitEP);
+                    _webProxyServer.SetAsSystemHttpsProxy(explicitEP);
+                    Console.WriteLine($"System proxy set to 127.0.0.1:{explicitEP.Port}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to set system proxy: {ex.Message}");
+                }
             }
         }
 
@@ -55,17 +65,20 @@
         private Task BeforeTunnelConnectRequest(object sender, TunnelConnectSessionEventArgs args)
         {
             string hostname = args.HttpClient.Request.RequestUri.Host;
-            Console.WriteLine(hostname);
             args.DecryptSsl = ShouldRedirect(hostname);
-
             return Task.CompletedTask;
         }
 
         private Task OnCertValidation(object sender, CertificateValidationEventArgs args)
         {
             if (args.SslPolicyErrors == SslPolicyErrors.None)
+            {
                 args.IsValid = true;
+                return Task.CompletedTask;
+            }
 
+            // For development/testing, accept all certificates
+            args.IsValid = true;
             return Task.CompletedTask;
         }
         
@@ -87,7 +100,11 @@
         private Task BeforeRequest(object sender, SessionEventArgs args)
         {
             string hostname = args.HttpClient.Request.RequestUri.Host;
-            if (ShouldRedirect(hostname) || ShouldForceRedirect(args.HttpClient.Request.RequestUri.AbsolutePath))
+            string path = args.HttpClient.Request.RequestUri.AbsolutePath;
+            bool shouldRedirect = ShouldRedirect(hostname);
+            bool shouldForceRedirect = ShouldForceRedirect(path);
+
+            if (shouldRedirect || shouldForceRedirect)
             {
                 string requestUrl = args.HttpClient.Request.Url;
                 Uri local = new Uri($"http://{_targetRedirectHost}:{_targetRedirectPort}/");
@@ -102,7 +119,7 @@
                 string replacedUrl = builtUrl.ToString();
                 if (ShouldBlock(builtUrl))
                 {
-                    Console.WriteLine($"Blocked: {replacedUrl}");
+                    Console.WriteLine($"[BLOCK] {path}");
                     args.Respond(new Titanium.Web.Proxy.Http.Response(Encoding.UTF8.GetBytes("Fuck off"))
                         {
                             StatusCode = 404,
@@ -111,8 +128,12 @@
                     return Task.CompletedTask;
                 }
 
-                Console.WriteLine("Redirecting: " + replacedUrl);
+                Console.WriteLine($"[REDIRECT] {hostname}{path} -> {_targetRedirectHost}:{_targetRedirectPort}{path}");
                 args.HttpClient.Request.Url = replacedUrl;
+            }
+            else
+            {
+                Console.WriteLine($"[PASS] {hostname}{path}");
             }
 
             return Task.CompletedTask;

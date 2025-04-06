@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
 
-namespace FireflySR.Tool.Proxy;
+namespace hkrpg.proxy;
 
 #if NET8_0_OR_GREATER
 [JsonSourceGenerationOptions(
