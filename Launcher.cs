@@ -1,207 +1,58 @@
 using System;
-using System.Drawing;
 using System.Diagnostics;
+using System.Drawing;
 using System.Windows.Forms;
-using System.Threading;
-using System.Text.Json;
 using System.IO;
-using Titanium.Web.Proxy;
-using hkrpg.proxy.Properties;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Configuration;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
-using System.Linq;
+using Titanium.Web.Proxy.EventArguments;
+using hkrpg.proxy.Properties;
 
 namespace hkrpg.proxy
 {
     public partial class Launcher : Form
     {
-        private Process? gameProcess;
+        private Process? _gameProcess = null;
+        private Process? _serverProcess = null;
+        private Process? _sdkServerProcess = null;
         private ProxyService? proxyService;
         private Button launchButton = null!;
         private Button stopButton = null!;
-        private Button browseButton = null!;
         private TextBox gamePathBox = null!;
+        private Button browseButton = null!;
+        private CheckBox localhostCheckBox = null!;
         private TextBox ipBox = null!;
         private TextBox portBox = null!;
-        private TextBox logBox = null!;
         private Label statusLabel = null!;
-        private CheckBox localhostCheckBox = null!;
+        private TextBox logBox = null!;
         private System.Windows.Forms.Timer? _processCheckTimer;
-        private string lastIpAddress = "127.0.0.1"; // Store the last used IP address
+        private string lastIpAddress = "127.0.0.1";
         private Button saveButton = null!;
+        private Button startServerButton = null!;
+        private Label serverStatusLabel = null!;
         private CheckBox enableLogsCheckBox = null!;
 
         public Launcher()
         {
             InitializeComponents();
+            // Since localhost is checked by default, set the initial state
+            ipBox.Text = "Localhost";
+            Settings.Default.DestinationHost = "127.0.0.1";
+            UpdateIpBoxState();
+            UpdateServerVisibility();
             InitializeProxy();
             LoadSettings();
             InitializeProcessCheckTimer();
         }
 
-        private void LoadSettings()
-        {
-            // Load settings from application settings
-            gamePathBox.Text = Settings.Default.GamePath;
-            lastIpAddress = Settings.Default.DestinationHost; // Store the initial IP
-            ipBox.Text = Settings.Default.DestinationHost;
-            portBox.Text = Settings.Default.DestinationPort.ToString();
-            
-            // Set checkbox to checked by default
-            localhostCheckBox.Checked = true;
-            // This will trigger LocalhostCheckBox_CheckedChanged which will set the display to "Localhost"
-            UpdateIpBoxState();
-        }
-
-        private void SaveSettings()
-        {
-            // Save settings to application settings
-            Settings.Default.GamePath = gamePathBox.Text;
-            Settings.Default.DestinationHost = ipBox.Text;
-            if (int.TryParse(portBox.Text, out int port))
-            {
-                Settings.Default.DestinationPort = port;
-            }
-            Settings.Default.Save();
-        }
-
-        private void InitializeProxy()
-        {
-            try
-            {
-                // Shutdown existing proxy if it exists
-                if (proxyService != null)
-                {
-                    try
-                    {
-                        proxyService.ProxyServer.BeforeRequest -= OnBeforeRequest;
-                        proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidation;
-                        proxyService.Shutdown();
-                    }
-                    catch { }
-                }
-
-                var config = new ProxyConfig
-                {
-                    DestinationHost = localhostCheckBox.Checked ? "127.0.0.1" : Settings.Default.DestinationHost,
-                    DestinationPort = Settings.Default.DestinationPort
-                };
-
-                // Initialize the collections
-                config.RedirectDomains.AddRange(new[] { 
-                    "api-os-takumi.mihoyo.com", 
-                    "hkrpg-api-os.hoyoverse.com", 
-                    "hkrpg-sdk-os.hoyoverse.com" 
-                });
-
-                config.AlwaysIgnoreDomains.AddRange(new[] { 
-                    "overseauspider.yuanshen.com" 
-                });
-
-                config.BlockUrls.Add("https://sg-public-data-api.hoyoverse.com/device-fp/api/getFp");
-
-                config.ForceRedirectOnUrlContains.AddRange(new[] { 
-                    "hkrpg-api-os.hoyoverse.com", 
-                    "hkrpg-sdk-os.hoyoverse.com" 
-                });
-
-                // Create proxy service with settings
-                proxyService = new ProxyService(
-                    config.DestinationHost,
-                    config.DestinationPort,
-                    config);
-
-                // Subscribe to proxy events
-                if (proxyService.ProxyServer != null)
-                {
-                    proxyService.ProxyServer.BeforeRequest += OnBeforeRequest;
-                    proxyService.ProxyServer.ServerCertificateValidationCallback += OnCertificateValidation;
-                }
-
-                statusLabel.Text = "Proxy initialized";
-                Log("Proxy service initialized");
-                Log($"Listening for connections to {config.DestinationHost}:{config.DestinationPort}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error initializing proxy: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                statusLabel.Text = "Proxy initialization failed";
-                Log($"Error: {ex.Message}");
-            }
-        }
-
-        private async Task OnBeforeRequest(object sender, Titanium.Web.Proxy.EventArguments.SessionEventArgs e)
-        {
-            try
-            {
-                string url = e.HttpClient.Request.Url;
-                string method = e.HttpClient.Request.Method;
-                
-                // Format the URL to be more readable
-                string formattedUrl = url;
-                if (url.Length > 80)
-                {
-                    // If URL is too long, truncate it and add ellipsis
-                    formattedUrl = url.Substring(0, 77) + "...";
-                }
-
-                // Create a clean log format
-                string logMessage = $"[{method}] {formattedUrl}";
-                
-                // Log in a separate task to avoid blocking
-                await Task.Run(() => Log(logMessage));
-            }
-            catch { }
-        }
-
-        private async Task OnCertificateValidation(object sender, Titanium.Web.Proxy.EventArguments.CertificateValidationEventArgs e)
-        {
-            e.IsValid = true;
-            await Task.CompletedTask;
-        }
-
-        private void Log(string message)
-        {
-            if (logBox.InvokeRequired)
-            {
-                logBox.Invoke(new Action(() => Log(message)));
-                return;
-            }
-
-            // Only log if logging is enabled
-            if (!enableLogsCheckBox.Checked)
-            {
-                return;
-            }
-
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            string formattedMessage = $"[{timestamp}] {message}";
-
-            // Add extra newline if this is a new type of message
-            if (logBox.Text.Length > 0 && !logBox.Text.EndsWith(Environment.NewLine))
-            {
-                logBox.AppendText(Environment.NewLine);
-            }
-
-            logBox.AppendText(formattedMessage + Environment.NewLine);
-
-            // Keep only the last 1000 lines to prevent memory issues
-            while (logBox.Lines.Length > 1000)
-            {
-                var lines = logBox.Lines.Skip(1).ToArray();
-                logBox.Lines = lines;
-            }
-
-            logBox.SelectionStart = logBox.Text.Length;
-            logBox.ScrollToCaret();
-        }
-
         private void InitializeComponents()
         {
             this.Text = "HKRPG Launcher";
-            this.Size = new Size(500, 280);  // Reduced initial height since logs are hidden
-            this.MinimumSize = new Size(500, 280);  // Minimum size without logs
+            this.Size = new Size(500, 300);
+            this.MinimumSize = new Size(500, 300);
 
             // Game path input
             var gamePathLabel = new Label
@@ -234,6 +85,7 @@ namespace hkrpg.proxy
                 Text = "Use Localhost (127.0.0.1)",
                 Location = new Point(20, 80),
                 AutoSize = true,
+                Checked = true,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
             localhostCheckBox.CheckedChanged += LocalhostCheckBox_CheckedChanged;
@@ -253,7 +105,6 @@ namespace hkrpg.proxy
                 Size = new Size(150, 30),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
-            ipBox.TextChanged += IpBox_TextChanged;
 
             var portLabel = new Label
             {
@@ -269,7 +120,6 @@ namespace hkrpg.proxy
                 Size = new Size(100, 30),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
-            portBox.TextChanged += PortBox_TextChanged;
 
             // Save button
             saveButton = new Button
@@ -301,107 +151,134 @@ namespace hkrpg.proxy
             };
             stopButton.Click += StopButton_Click;
 
-            // Status label
+            // Status label for proxy/game
             statusLabel = new Label
             {
-                Text = "Ready",
-                Location = new Point(240, 175),
-                Size = new Size(220, 20),
+                Text = "Ready: Proxy Initialized",
+                Location = new Point(20, 210),
                 AutoSize = true,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
 
-            // Enable logs checkbox - moved below buttons
+            // Enable logs checkbox
             enableLogsCheckBox = new CheckBox
             {
                 Text = "Enable Connection Logs",
-                Location = new Point(20, 210),
+                Location = new Point(20, 240),
                 AutoSize = true,
-                Checked = false,  // Disabled by default
+                Checked = false,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
             enableLogsCheckBox.CheckedChanged += EnableLogsCheckBox_CheckedChanged;
 
-            // Log box and label
+            // Server controls
+            startServerButton = new Button
+            {
+                Text = "Start Server",
+                Location = new Point(240, 170),
+                Size = new Size(100, 30),
+                Visible = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left
+            };
+            startServerButton.Click += StartServerButton_Click;
+
+            serverStatusLabel = new Label
+            {
+                Text = "Server: Stopped",
+                Location = new Point(240, 210),
+                AutoSize = true,
+                Visible = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left
+            };
+
+            // Log box
             var logLabel = new Label
             {
                 Text = "Connection Log:",
-                Location = new Point(20, 235),
+                Location = new Point(20, 270),
                 AutoSize = true,
-                Visible = false,  // Hidden by default
+                Visible = false,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
 
             logBox = new TextBox
             {
-                Location = new Point(20, 255),
+                Location = new Point(20, 290),
                 Size = new Size(440, 150),
                 Multiline = true,
                 ReadOnly = true,
                 ScrollBars = ScrollBars.Vertical,
                 BackColor = Color.White,
                 Font = new Font("Consolas", 9f),
-                Visible = false,  // Hidden by default
+                Visible = false,
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
 
-            // Add controls to form
-            this.Controls.AddRange(new Control[] { 
+            // Add all controls
+            this.Controls.AddRange(new Control[] {
                 gamePathLabel, gamePathBox, browseButton,
                 localhostCheckBox,
                 ipLabel, ipBox, portLabel, portBox,
                 saveButton,
                 launchButton, stopButton, statusLabel,
+                startServerButton, serverStatusLabel,
                 enableLogsCheckBox,
                 logLabel, logBox
             });
+
+            UpdateServerVisibility();
+        }
+
+        private void InitializeProxy()
+        {
+            var config = new ProxyConfig
+            {
+                DestinationHost = Settings.Default.DestinationHost,
+                DestinationPort = Settings.Default.DestinationPort,
+                ProxyBindPort = 8080
+            };
+
+            proxyService = new ProxyService(config.DestinationHost, config.DestinationPort, config);
+            proxyService.ProxyServer.BeforeRequest += OnBeforeRequest;
+            proxyService.ProxyServer.ServerCertificateValidationCallback += OnCertificateValidationAsync;
+        }
+
+        private void LoadSettings()
+        {
+            if (Settings.Default.GamePath != null)
+            {
+                gamePathBox.Text = Settings.Default.GamePath;
+            }
             
-            // Initialize IP box state
-            UpdateIpBoxState();
+            ipBox.Text = Settings.Default.DestinationHost;
+            portBox.Text = Settings.Default.DestinationPort.ToString();
         }
 
-        private void LocalhostCheckBox_CheckedChanged(object? sender, EventArgs e)
+        private void SaveSettings()
         {
-            if (localhostCheckBox.Checked)
+            Settings.Default.GamePath = gamePathBox.Text;
+            Settings.Default.DestinationHost = ipBox.Text;
+            if (int.TryParse(portBox.Text, out int port))
             {
-                // Store current IP before changing display
-                lastIpAddress = ipBox.Text;
-                
-                // Change display to "Localhost"
-                ipBox.Text = "Localhost";
-                
-                // Use 127.0.0.1 for the actual proxy
-                Settings.Default.DestinationHost = "127.0.0.1";
-                SaveSettings();
-                
-                // Reinitialize proxy with localhost
-                InitializeProxy();
+                Settings.Default.DestinationPort = port;
             }
-            else
-            {
-                // Restore the previous IP
-                ipBox.Text = lastIpAddress;
-                Settings.Default.DestinationHost = lastIpAddress;
-                SaveSettings();
-                
-                // Reinitialize proxy with the previous IP
-                InitializeProxy();
-            }
-            UpdateIpBoxState();
+            Settings.Default.Save();
         }
 
-        private void UpdateIpBoxState()
+        private void InitializeProcessCheckTimer()
         {
-            ipBox.Enabled = !localhostCheckBox.Checked;
+            _processCheckTimer = new System.Windows.Forms.Timer();
+            _processCheckTimer.Interval = 1000;
+            _processCheckTimer.Tick += ProcessCheckTimer_Tick;
+            _processCheckTimer.Start();
         }
 
         private void BrowseButton_Click(object? sender, EventArgs e)
         {
             using var dialog = new OpenFileDialog
             {
-                Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
-                Title = "Select Game Executable",
-                FileName = gamePathBox.Text
+                Filter = "Game Executable|StarRail.exe",
+                Title = "Select Game Executable"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
@@ -411,14 +288,47 @@ namespace hkrpg.proxy
             }
         }
 
-        private void IpBox_TextChanged(object? sender, EventArgs e)
+        private void LaunchButton_Click(object? sender, EventArgs e)
         {
-            // Remove auto-save functionality
+            try
+            {
+                _gameProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = gamePathBox.Text,
+                        UseShellExecute = true
+                    }
+                };
+                _gameProcess.Start();
+                statusLabel.Text = "Game started";
+                SaveSettings();
+                UpdateUIState(true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to start game: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        private void PortBox_TextChanged(object? sender, EventArgs e)
+        private void StopButton_Click(object? sender, EventArgs e)
         {
-            // Remove auto-save functionality
+            if (_gameProcess != null)
+            {
+                try
+                {
+                    _gameProcess.Kill();
+                    _gameProcess = null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to stop game: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    UpdateUIState(false);
+                }
+            }
         }
 
         private void SaveButton_Click(object? sender, EventArgs e)
@@ -444,123 +354,218 @@ namespace hkrpg.proxy
             Log("Settings saved and proxy reinitialized");
         }
 
-        private void LaunchButton_Click(object? sender, EventArgs e)
+        private void StartServer()
         {
-            if (string.IsNullOrEmpty(gamePathBox.Text))
-            {
-                MessageBox.Show("Please select the game executable first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (proxyService == null)
-            {
-                MessageBox.Show("Proxy service is not initialized. Please restart the application.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
             try
             {
-                // Start game
-                gameProcess = new Process
+                string serverPath = Path.Combine(Application.StartupPath, "server.exe");
+                if (File.Exists(serverPath))
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = gamePathBox.Text,
-                        UseShellExecute = true
-                    }
-                };
-                gameProcess.Start();
-                statusLabel.Text = "Game started";
-                SaveSettings();
+                    StartSingleServer(serverPath);
+                    return;
+                }
 
-                UpdateUIState(true);
+                string gameServerPath = Path.Combine(Application.StartupPath, "gameserver.exe");
+                string sdkServerPath = Path.Combine(Application.StartupPath, "sdkserver.exe");
+                
+                if (File.Exists(gameServerPath) && File.Exists(sdkServerPath))
+                {
+                    StartDualServers(gameServerPath, sdkServerPath);
+                    return;
+                }
+
+                string[] jarFiles = Directory.GetFiles(Application.StartupPath, "*.jar");
+                if (jarFiles.Length > 0)
+                {
+                    StartSingleServer(jarFiles[0]);
+                    return;
+                }
+
+                MessageBox.Show("No valid server executables found. Please make sure server files are in the same directory.", 
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error launching game: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                StopButton_Click(null, EventArgs.Empty);
+                MessageBox.Show($"Failed to start server: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log($"Server start error: {ex.Message}");
             }
         }
 
-        private void StopButton_Click(object? sender, EventArgs e)
+        private void StartSingleServer(string serverPath)
         {
-            if (gameProcess != null)
+            ProcessStartInfo startInfo;
+            if (serverPath.EndsWith(".jar"))
             {
-                try
+                startInfo = new ProcessStartInfo
                 {
-                    gameProcess.Kill();
-                    gameProcess = null;
-                }
-                catch (Exception ex)
+                    FileName = "java",
+                    Arguments = $"-jar \"{serverPath}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
+                };
+            }
+            else
+            {
+                startInfo = new ProcessStartInfo
                 {
-                    MessageBox.Show($"Error stopping game: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    FileName = serverPath,
+                    UseShellExecute = true,
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
+                };
             }
 
-            if (proxyService != null)
-            {
-                try
-                {
-                    // Unsubscribe from events
-                    proxyService.ProxyServer.BeforeRequest -= OnBeforeRequest;
-                    proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidation;
-                    proxyService.Shutdown();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error stopping proxy: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
+            _serverProcess = new Process { StartInfo = startInfo };
+            _serverProcess.EnableRaisingEvents = true;
+            _serverProcess.Exited += ServerProcess_Exited;
+            _serverProcess.Start();
 
-            UpdateUIState(false);
+            startServerButton.Text = "Stop Server";
+            serverStatusLabel.Text = $"Server: Running ({Path.GetFileName(serverPath)})";
+            Log($"Started server: {Path.GetFileName(serverPath)}");
         }
 
-        private void Launcher_FormClosing(object? sender, FormClosingEventArgs e)
+        private void StartDualServers(string gameServerPath, string sdkServerPath)
         {
-            StopButton_Click(null, EventArgs.Empty);
-            SaveSettings();
+            _serverProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = gameServerPath,
+                    UseShellExecute = true,
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
+                }
+            };
+            _serverProcess.EnableRaisingEvents = true;
+            _serverProcess.Exited += ServerProcess_Exited;
+            _serverProcess.Start();
+
+            _sdkServerProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = sdkServerPath,
+                    UseShellExecute = true,
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
+                }
+            };
+            _sdkServerProcess.EnableRaisingEvents = true;
+            _sdkServerProcess.Exited += ServerProcess_Exited;
+            _sdkServerProcess.Start();
+
+            startServerButton.Text = "Stop Servers";
+            serverStatusLabel.Text = "Servers: Running (Game + SDK)";
+            Log("Started Game Server and SDK Server");
         }
 
-        private void ProcessCheckTimer_Tick(object? sender, EventArgs e)
+        private void StopServer()
         {
             try
             {
-                if (gameProcess != null)
+                if (_serverProcess != null && !_serverProcess.HasExited)
                 {
-                    bool hasExited;
-                    try
-                    {
-                        hasExited = gameProcess.HasExited;
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Process is no longer valid
-                        hasExited = true;
-                    }
-
-                    if (hasExited)
-                    {
-                        gameProcess = null;
-                        UpdateUIState(false);
-                    }
+                    _serverProcess.Kill();
+                    _serverProcess.WaitForExit();
                 }
+
+                if (_sdkServerProcess != null && !_sdkServerProcess.HasExited)
+                {
+                    _sdkServerProcess.Kill();
+                    _sdkServerProcess.WaitForExit();
+                }
+
+                Log("All server processes stopped");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // If any other error occurs, assume the process is gone
-                gameProcess = null;
-                UpdateUIState(false);
+                Log($"Server stop error: {ex.Message}");
+            }
+            finally
+            {
+                _serverProcess = null;
+                _sdkServerProcess = null;
+                startServerButton.Text = "Start Server";
+                serverStatusLabel.Text = "Server: Stopped";
             }
         }
 
-        private void InitializeProcessCheckTimer()
+        private void StartServerButton_Click(object? sender, EventArgs e)
         {
-            _processCheckTimer = new System.Windows.Forms.Timer
+            if (_serverProcess == null || _serverProcess.HasExited)
             {
-                Interval = 1000 // Check every second
-            };
-            _processCheckTimer.Tick += ProcessCheckTimer_Tick;
-            _processCheckTimer.Start();
+                StartServer();
+            }
+            else
+            {
+                StopServer();
+            }
+        }
+
+        private void LocalhostCheckBox_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (localhostCheckBox.Checked)
+            {
+                lastIpAddress = ipBox.Text;
+                ipBox.Text = "Localhost";
+                Settings.Default.DestinationHost = "127.0.0.1";
+                SaveSettings();
+                InitializeProxy();
+            }
+            else
+            {
+                if (_serverProcess != null && !_serverProcess.HasExited)
+                {
+                    StopServer();
+                }
+
+                ipBox.Text = lastIpAddress;
+                Settings.Default.DestinationHost = lastIpAddress;
+                SaveSettings();
+                InitializeProxy();
+            }
+            UpdateIpBoxState();
+            UpdateServerVisibility();
+        }
+
+        private void EnableLogsCheckBox_CheckedChanged(object? sender, EventArgs e)
+        {
+            bool showLogs = enableLogsCheckBox.Checked;
+            
+            var logLabel = Controls.Cast<Control>()
+                .FirstOrDefault(c => c is Label && c.Text == "Connection Log:");
+            if (logLabel != null)
+            {
+                logLabel.Visible = showLogs;
+            }
+
+            logBox.Visible = showLogs;
+            
+            if (showLogs)
+            {
+                this.MinimumSize = new Size(500, 450);
+                this.Size = new Size(500, 450);
+                Log("Connection logging enabled");
+            }
+            else
+            {
+                this.Size = new Size(500, 300);
+                this.MinimumSize = new Size(500, 300);
+                logBox.Clear();
+            }
+        }
+
+        private void UpdateServerVisibility()
+        {
+            startServerButton.Visible = localhostCheckBox.Checked;
+            serverStatusLabel.Visible = localhostCheckBox.Checked;
+        }
+
+        private void UpdateIpBoxState()
+        {
+            ipBox.Enabled = !localhostCheckBox.Checked;
         }
 
         private void UpdateUIState(bool isRunning)
@@ -580,51 +585,128 @@ namespace hkrpg.proxy
             saveButton.Enabled = !isRunning;
             localhostCheckBox.Enabled = !isRunning;
             enableLogsCheckBox.Enabled = !isRunning;
-            statusLabel.Text = isRunning ? "Game started" : "Ready";
+            startServerButton.Enabled = true;
+            statusLabel.Text = isRunning ? "Game started" : "Ready: Proxy Initialized";
         }
 
-        private void EnableLogsCheckBox_CheckedChanged(object? sender, EventArgs e)
+        private void ProcessCheckTimer_Tick(object? sender, EventArgs e)
         {
-            bool showLogs = enableLogsCheckBox.Checked;
-            
-            // Find the log label and update visibility
-            var logLabel = Controls.Cast<Control>()
-                .FirstOrDefault(c => c is Label && c.Text == "Connection Log:");
-            if (logLabel != null)
+            CheckGameProcess();
+        }
+
+        private void CheckGameProcess()
+        {
+            try
             {
-                logLabel.Visible = showLogs;
+                if (_gameProcess != null)
+                {
+                    bool hasExited;
+                    try
+                    {
+                        hasExited = _gameProcess.HasExited;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        hasExited = true;
+                    }
+
+                    if (hasExited)
+                    {
+                        _gameProcess = null;
+                        UpdateUIState(false);
+                    }
+                }
+            }
+            catch
+            {
+                _gameProcess = null;
+                UpdateUIState(false);
+            }
+        }
+
+        private void ServerProcess_Exited(object? sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => ServerProcess_Exited(sender, e)));
+                return;
             }
 
-            // Update log box visibility
-            logBox.Visible = showLogs;
-            
-            // Adjust form size
-            if (showLogs)
+            StopServer();
+            Log("Server process exited");
+        }
+
+        private async Task OnBeforeRequest(object sender, Titanium.Web.Proxy.EventArguments.SessionEventArgs e)
+        {
+            try
             {
-                this.MinimumSize = new Size(500, 450);  // Larger minimum size with logs
-                this.Size = new Size(500, 450);  // Expand window for logs
-                Log("Connection logging enabled");
+                string url = e.HttpClient.Request.Url;
+                string method = e.HttpClient.Request.Method;
+                
+                string formattedUrl = url;
+                if (url.Length > 80)
+                {
+                    formattedUrl = url.Substring(0, 77) + "...";
+                }
+
+                string logMessage = $"[{method}] {formattedUrl}";
+                await Task.Run(() => Log(logMessage));
             }
-            else
+            catch { }
+        }
+
+        private async Task OnCertificateValidationAsync(object sender, CertificateValidationEventArgs e)
+        {
+            e.IsValid = true;
+            await Task.CompletedTask;
+        }
+
+        private void Log(string message)
+        {
+            if (logBox.InvokeRequired)
             {
-                this.Size = new Size(500, 280);  // Collapse window without logs
-                this.MinimumSize = new Size(500, 280);  // Smaller minimum size without logs
-                logBox.Clear();
+                logBox.Invoke(new Action(() => Log(message)));
+                return;
             }
+
+            if (!enableLogsCheckBox.Checked)
+            {
+                return;
+            }
+
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            string formattedMessage = $"[{timestamp}] {message}";
+
+            if (logBox.Text.Length > 0 && !logBox.Text.EndsWith(Environment.NewLine))
+            {
+                logBox.AppendText(Environment.NewLine);
+            }
+
+            logBox.AppendText(formattedMessage + Environment.NewLine);
+
+            while (logBox.Lines.Length > 1000)
+            {
+                var lines = logBox.Lines.Skip(1).ToArray();
+                logBox.Lines = lines;
+            }
+
+            logBox.SelectionStart = logBox.Text.Length;
+            logBox.ScrollToCaret();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            StopServer();
             base.OnFormClosing(e);
             
             _processCheckTimer?.Stop();
             _processCheckTimer?.Dispose();
             
-            if (gameProcess != null)
+            if (_gameProcess != null)
             {
                 try
                 {
-                    gameProcess.Kill();
+                    _gameProcess.Kill();
                 }
                 catch { }
             }
@@ -633,9 +715,8 @@ namespace hkrpg.proxy
             {
                 try
                 {
-                    // Unsubscribe from events
                     proxyService.ProxyServer.BeforeRequest -= OnBeforeRequest;
-                    proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidation;
+                    proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidationAsync;
                     proxyService.Shutdown();
                 }
                 catch { }

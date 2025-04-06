@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Titanium.Web.Proxy" Version="3.1.1450" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
