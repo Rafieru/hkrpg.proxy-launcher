@@ -1,0 +1,40 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  publish-aot:
+    strategy:
+      matrix:
+        runtime-id: [win-x64]
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Test
+      run: dotnet test --verbosity normal
+    - name: Publish
+      run: dotnet publish FireflySR.Tool.Proxy.csproj -c Release -r ${{ matrix.runtime-id }}
+    - name: Remove .pdb debug symbols
+      run: |
+        rm bin/Release/net8.0/${{ matrix.runtime-id }}/publish/*.pdb
+        rm bin/Release/net8.0/${{ matrix.runtime-id }}/publish/**/*.pdb
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: FireflySR.Tool.Proxy_${{ matrix.runtime-id }}
+        path: bin/Release/net8.0/${{ matrix.runtime-id }}/publish
