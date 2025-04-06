@@ -6,6 +6,7 @@ namespace hkrpg.proxy
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.Timer _processCheckTimer;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -28,218 +29,223 @@ namespace hkrpg.proxy
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.gamePathBox = new System.Windows.Forms.TextBox();
-            this.browseButton = new System.Windows.Forms.Button();
-            this.localhostCheckBox = new System.Windows.Forms.CheckBox();
-            this.ipBox = new System.Windows.Forms.TextBox();
-            this.portBox = new System.Windows.Forms.TextBox();
-            this.statusLabel = new System.Windows.Forms.Label();
-            this.logBox = new System.Windows.Forms.TextBox();
-            this.launchButton = new System.Windows.Forms.Button();
-            this.stopButton = new System.Windows.Forms.Button();
-            this.saveButton = new System.Windows.Forms.Button();
-            this.startServerButton = new System.Windows.Forms.Button();
-            this.serverStatusLabel = new System.Windows.Forms.Label();
-            this.enableLogsCheckBox = new System.Windows.Forms.CheckBox();
-            this.gamePathLabel = new System.Windows.Forms.Label();
-            this.ipLabel = new System.Windows.Forms.Label();
-            this.portLabel = new System.Windows.Forms.Label();
-            this.logLabel = new System.Windows.Forms.Label();
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            _processCheckTimer = new System.Windows.Forms.Timer(components);
+            gamePathBox = new TextBox();
+            browseButton = new Button();
+            localhostCheckBox = new CheckBox();
+            ipBox = new TextBox();
+            portBox = new TextBox();
+            statusLabel = new Label();
+            logBox = new TextBox();
+            launchButton = new Button();
+            stopButton = new Button();
+            saveButton = new Button();
+            startServerButton = new Button();
+            serverStatusLabel = new Label();
+            enableLogsCheckBox = new CheckBox();
+            gamePathLabel = new Label();
+            ipLabel = new Label();
+            portLabel = new Label();
+            logLabel = new Label();
+            SuspendLayout();
+            // 
+            // _processCheckTimer
+            // 
+            _processCheckTimer.Interval = 1000;
+            _processCheckTimer.Tick += ProcessCheckTimer_Tick;
             // 
             // gamePathBox
             // 
-            this.gamePathBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gamePathBox.Location = new System.Drawing.Point(20, 40);
-            this.gamePathBox.Name = "gamePathBox";
-            this.gamePathBox.Size = new System.Drawing.Size(350, 23);
-            this.gamePathBox.TabIndex = 0;
+            gamePathBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gamePathBox.Location = new Point(20, 40);
+            gamePathBox.Name = "gamePathBox";
+            gamePathBox.Size = new Size(350, 23);
+            gamePathBox.TabIndex = 0;
             // 
             // browseButton
             // 
-            this.browseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.browseButton.Location = new System.Drawing.Point(380, 40);
-            this.browseButton.Name = "browseButton";
-            this.browseButton.Size = new System.Drawing.Size(80, 23);
-            this.browseButton.TabIndex = 1;
-            this.browseButton.Text = "Browse";
-            this.browseButton.Click += new System.EventHandler(this.BrowseButton_Click);
+            browseButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            browseButton.Location = new Point(380, 40);
+            browseButton.Name = "browseButton";
+            browseButton.Size = new Size(80, 23);
+            browseButton.TabIndex = 1;
+            browseButton.Text = "Browse";
+            browseButton.Click += BrowseButton_Click;
             // 
             // localhostCheckBox
             // 
-            this.localhostCheckBox.AutoSize = true;
-            this.localhostCheckBox.Checked = true;
-            this.localhostCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.localhostCheckBox.Location = new System.Drawing.Point(20, 80);
-            this.localhostCheckBox.Name = "localhostCheckBox";
-            this.localhostCheckBox.Size = new System.Drawing.Size(150, 19);
-            this.localhostCheckBox.TabIndex = 2;
-            this.localhostCheckBox.Text = "Use Localhost (127.0.0.1)";
-            this.localhostCheckBox.CheckedChanged += new System.EventHandler(this.LocalhostCheckBox_CheckedChanged);
+            localhostCheckBox.AutoSize = true;
+            localhostCheckBox.Checked = true;
+            localhostCheckBox.CheckState = CheckState.Checked;
+            localhostCheckBox.Location = new Point(20, 80);
+            localhostCheckBox.Name = "localhostCheckBox";
+            localhostCheckBox.Size = new Size(155, 19);
+            localhostCheckBox.TabIndex = 2;
+            localhostCheckBox.Text = "Use Localhost (127.0.0.1)";
+            localhostCheckBox.CheckedChanged += LocalhostCheckBox_CheckedChanged;
             // 
             // ipBox
             // 
-            this.ipBox.Location = new System.Drawing.Point(20, 130);
-            this.ipBox.Name = "ipBox";
-            this.ipBox.Size = new System.Drawing.Size(150, 23);
-            this.ipBox.TabIndex = 3;
+            ipBox.Location = new Point(20, 130);
+            ipBox.Name = "ipBox";
+            ipBox.Size = new Size(150, 23);
+            ipBox.TabIndex = 3;
             // 
             // portBox
             // 
-            this.portBox.Location = new System.Drawing.Point(190, 130);
-            this.portBox.Name = "portBox";
-            this.portBox.Size = new System.Drawing.Size(100, 23);
-            this.portBox.TabIndex = 4;
+            portBox.Location = new Point(190, 130);
+            portBox.Name = "portBox";
+            portBox.Size = new Size(100, 23);
+            portBox.TabIndex = 4;
             // 
             // statusLabel
             // 
-            this.statusLabel.AutoSize = true;
-            this.statusLabel.Location = new System.Drawing.Point(20, 210);
-            this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(108, 15);
-            this.statusLabel.TabIndex = 5;
-            this.statusLabel.Text = "Ready: Proxy Initialized";
+            statusLabel.AutoSize = true;
+            statusLabel.Location = new Point(20, 210);
+            statusLabel.Name = "statusLabel";
+            statusLabel.Size = new Size(128, 15);
+            statusLabel.TabIndex = 5;
+            statusLabel.Text = "Ready: Proxy Initialized";
             // 
             // logBox
             // 
-            this.logBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.logBox.BackColor = System.Drawing.Color.White;
-            this.logBox.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.logBox.Location = new System.Drawing.Point(20, 290);
-            this.logBox.Multiline = true;
-            this.logBox.Name = "logBox";
-            this.logBox.ReadOnly = true;
-            this.logBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.logBox.Size = new System.Drawing.Size(440, 150);
-            this.logBox.TabIndex = 6;
-            this.logBox.Visible = false;
+            logBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            logBox.BackColor = Color.White;
+            logBox.Font = new Font("Consolas", 9F);
+            logBox.Location = new Point(20, 281);
+            logBox.Multiline = true;
+            logBox.Name = "logBox";
+            logBox.ReadOnly = true;
+            logBox.ScrollBars = ScrollBars.Vertical;
+            logBox.Size = new Size(440, 142);
+            logBox.TabIndex = 6;
+            logBox.Visible = false;
+            logBox.TextChanged += logBox_TextChanged;
             // 
             // launchButton
             // 
-            this.launchButton.Location = new System.Drawing.Point(20, 170);
-            this.launchButton.Name = "launchButton";
-            this.launchButton.Size = new System.Drawing.Size(100, 30);
-            this.launchButton.TabIndex = 7;
-            this.launchButton.Text = "Launch";
-            this.launchButton.Click += new System.EventHandler(this.LaunchButton_Click);
+            launchButton.Location = new Point(20, 170);
+            launchButton.Name = "launchButton";
+            launchButton.Size = new Size(100, 30);
+            launchButton.TabIndex = 7;
+            launchButton.Text = "Launch";
+            launchButton.Click += LaunchButton_Click;
             // 
             // stopButton
             // 
-            this.stopButton.Enabled = false;
-            this.stopButton.Location = new System.Drawing.Point(130, 170);
-            this.stopButton.Name = "stopButton";
-            this.stopButton.Size = new System.Drawing.Size(100, 30);
-            this.stopButton.TabIndex = 8;
-            this.stopButton.Text = "Stop";
-            this.stopButton.Click += new System.EventHandler(this.StopButton_Click);
+            stopButton.Enabled = false;
+            stopButton.Location = new Point(130, 170);
+            stopButton.Name = "stopButton";
+            stopButton.Size = new Size(100, 30);
+            stopButton.TabIndex = 8;
+            stopButton.Text = "Stop";
+            stopButton.Click += StopButton_Click;
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(300, 130);
-            this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(100, 23);
-            this.saveButton.TabIndex = 9;
-            this.saveButton.Text = "Save Settings";
-            this.saveButton.Click += new System.EventHandler(this.SaveButton_Click);
+            saveButton.Location = new Point(300, 130);
+            saveButton.Name = "saveButton";
+            saveButton.Size = new Size(100, 23);
+            saveButton.TabIndex = 9;
+            saveButton.Text = "Save Settings";
+            saveButton.Click += SaveButton_Click;
             // 
             // startServerButton
             // 
-            this.startServerButton.Location = new System.Drawing.Point(240, 170);
-            this.startServerButton.Name = "startServerButton";
-            this.startServerButton.Size = new System.Drawing.Size(100, 30);
-            this.startServerButton.TabIndex = 10;
-            this.startServerButton.Text = "Start Server";
-            this.startServerButton.Visible = false;
-            this.startServerButton.Click += new System.EventHandler(this.StartServerButton_Click);
+            startServerButton.Location = new Point(240, 170);
+            startServerButton.Name = "startServerButton";
+            startServerButton.Size = new Size(100, 30);
+            startServerButton.TabIndex = 10;
+            startServerButton.Text = "Start Server";
+            startServerButton.Visible = false;
+            startServerButton.Click += StartServerButton_Click;
             // 
             // serverStatusLabel
             // 
-            this.serverStatusLabel.AutoSize = true;
-            this.serverStatusLabel.Location = new System.Drawing.Point(240, 210);
-            this.serverStatusLabel.Name = "serverStatusLabel";
-            this.serverStatusLabel.Size = new System.Drawing.Size(85, 15);
-            this.serverStatusLabel.TabIndex = 11;
-            this.serverStatusLabel.Text = "Server: Stopped";
-            this.serverStatusLabel.Visible = false;
+            serverStatusLabel.AutoSize = true;
+            serverStatusLabel.Location = new Point(240, 210);
+            serverStatusLabel.Name = "serverStatusLabel";
+            serverStatusLabel.Size = new Size(89, 15);
+            serverStatusLabel.TabIndex = 11;
+            serverStatusLabel.Text = "Server: Stopped";
+            serverStatusLabel.Visible = false;
             // 
             // enableLogsCheckBox
             // 
-            this.enableLogsCheckBox.AutoSize = true;
-            this.enableLogsCheckBox.Location = new System.Drawing.Point(20, 240);
-            this.enableLogsCheckBox.Name = "enableLogsCheckBox";
-            this.enableLogsCheckBox.Size = new System.Drawing.Size(140, 19);
-            this.enableLogsCheckBox.TabIndex = 12;
-            this.enableLogsCheckBox.Text = "Enable Connection Logs";
-            this.enableLogsCheckBox.CheckedChanged += new System.EventHandler(this.EnableLogsCheckBox_CheckedChanged);
+            enableLogsCheckBox.AutoSize = true;
+            enableLogsCheckBox.Location = new Point(20, 240);
+            enableLogsCheckBox.Name = "enableLogsCheckBox";
+            enableLogsCheckBox.Size = new Size(154, 19);
+            enableLogsCheckBox.TabIndex = 12;
+            enableLogsCheckBox.Text = "Enable Connection Logs";
+            enableLogsCheckBox.CheckedChanged += EnableLogsCheckBox_CheckedChanged;
             // 
             // gamePathLabel
             // 
-            this.gamePathLabel.AutoSize = true;
-            this.gamePathLabel.Location = new System.Drawing.Point(20, 20);
-            this.gamePathLabel.Name = "gamePathLabel";
-            this.gamePathLabel.Size = new System.Drawing.Size(67, 15);
-            this.gamePathLabel.TabIndex = 13;
-            this.gamePathLabel.Text = "Game Path:";
+            gamePathLabel.AutoSize = true;
+            gamePathLabel.Location = new Point(20, 20);
+            gamePathLabel.Name = "gamePathLabel";
+            gamePathLabel.Size = new Size(68, 15);
+            gamePathLabel.TabIndex = 13;
+            gamePathLabel.Text = "Game Path:";
             // 
             // ipLabel
             // 
-            this.ipLabel.AutoSize = true;
-            this.ipLabel.Location = new System.Drawing.Point(20, 110);
-            this.ipLabel.Name = "ipLabel";
-            this.ipLabel.Size = new System.Drawing.Size(65, 15);
-            this.ipLabel.TabIndex = 14;
-            this.ipLabel.Text = "IP Address:";
+            ipLabel.AutoSize = true;
+            ipLabel.Location = new Point(20, 110);
+            ipLabel.Name = "ipLabel";
+            ipLabel.Size = new Size(65, 15);
+            ipLabel.TabIndex = 14;
+            ipLabel.Text = "IP Address:";
             // 
             // portLabel
             // 
-            this.portLabel.AutoSize = true;
-            this.portLabel.Location = new System.Drawing.Point(190, 110);
-            this.portLabel.Name = "portLabel";
-            this.portLabel.Size = new System.Drawing.Size(32, 15);
-            this.portLabel.TabIndex = 15;
-            this.portLabel.Text = "Port:";
+            portLabel.AutoSize = true;
+            portLabel.Location = new Point(190, 110);
+            portLabel.Name = "portLabel";
+            portLabel.Size = new Size(32, 15);
+            portLabel.TabIndex = 15;
+            portLabel.Text = "Port:";
             // 
             // logLabel
             // 
-            this.logLabel.AutoSize = true;
-            this.logLabel.Location = new System.Drawing.Point(20, 270);
-            this.logLabel.Name = "logLabel";
-            this.logLabel.Size = new System.Drawing.Size(93, 15);
-            this.logLabel.TabIndex = 16;
-            this.logLabel.Text = "Connection Log:";
-            this.logLabel.Visible = false;
+            logLabel.AutoSize = true;
+            logLabel.Location = new Point(19, 262);
+            logLabel.Name = "logLabel";
+            logLabel.Size = new Size(95, 15);
+            logLabel.TabIndex = 16;
+            logLabel.Text = "Connection Log:";
+            logLabel.Visible = false;
             // 
             // Launcher
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 300);
-            this.Controls.Add(this.logLabel);
-            this.Controls.Add(this.portLabel);
-            this.Controls.Add(this.ipLabel);
-            this.Controls.Add(this.gamePathLabel);
-            this.Controls.Add(this.enableLogsCheckBox);
-            this.Controls.Add(this.serverStatusLabel);
-            this.Controls.Add(this.startServerButton);
-            this.Controls.Add(this.saveButton);
-            this.Controls.Add(this.stopButton);
-            this.Controls.Add(this.launchButton);
-            this.Controls.Add(this.logBox);
-            this.Controls.Add(this.statusLabel);
-            this.Controls.Add(this.portBox);
-            this.Controls.Add(this.ipBox);
-            this.Controls.Add(this.localhostCheckBox);
-            this.Controls.Add(this.browseButton);
-            this.Controls.Add(this.gamePathBox);
-            this.MinimumSize = new System.Drawing.Size(500, 300);
-            this.Name = "Launcher";
-            this.Text = "HKRPG Launcher";
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(484, 435);
+            Controls.Add(logLabel);
+            Controls.Add(portLabel);
+            Controls.Add(ipLabel);
+            Controls.Add(gamePathLabel);
+            Controls.Add(enableLogsCheckBox);
+            Controls.Add(serverStatusLabel);
+            Controls.Add(startServerButton);
+            Controls.Add(saveButton);
+            Controls.Add(stopButton);
+            Controls.Add(launchButton);
+            Controls.Add(logBox);
+            Controls.Add(statusLabel);
+            Controls.Add(portBox);
+            Controls.Add(ipBox);
+            Controls.Add(localhostCheckBox);
+            Controls.Add(browseButton);
+            Controls.Add(gamePathBox);
+            MinimumSize = new Size(500, 430);
+            Name = "Launcher";
+            Text = "HKRPG Launcher";
+            Load += Launcher_Load;
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

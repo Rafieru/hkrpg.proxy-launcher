@@ -21,7 +21,6 @@ namespace hkrpg.proxy
         private Process? _sdkServerProcess;
         private ProxyService? proxyService;
         private string lastIpAddress = "127.0.0.1";
-        private System.Windows.Forms.Timer? _processCheckTimer;
 
         public Launcher()
         {
@@ -51,7 +50,7 @@ namespace hkrpg.proxy
             {
                 gamePathBox.Text = Settings.Default.GamePath;
             }
-            
+
             ipBox.Text = Settings.Default.DestinationHost;
             portBox.Text = Settings.Default.DestinationPort.ToString();
             UpdateIpBoxState();
@@ -71,10 +70,7 @@ namespace hkrpg.proxy
 
         private void InitializeProcessCheckTimer()
         {
-            _processCheckTimer = new System.Windows.Forms.Timer(components);
-            _processCheckTimer.Interval = 1000;
-            _processCheckTimer.Tick += ProcessCheckTimer_Tick;
-            _processCheckTimer.Start();
+            _processCheckTimer?.Start();
         }
 
         private void ProcessCheckTimer_Tick(object? sender, EventArgs e)
@@ -158,7 +154,7 @@ namespace hkrpg.proxy
                 _gameProcess = null;
                 _serverProcess = null;
                 _sdkServerProcess = null;
-                
+
                 if (InvokeRequired)
                 {
                     Invoke(new Action(() => UpdateUIState(false)));
@@ -167,12 +163,12 @@ namespace hkrpg.proxy
                 {
                     UpdateUIState(false);
                 }
-                
+
                 statusLabel?.Invoke((MethodInvoker)delegate
                 {
                     statusLabel.Text = "Game stopped";
                 });
-                
+
                 serverStatusLabel?.Invoke((MethodInvoker)delegate
                 {
                     serverStatusLabel.Text = "Server: Stopped";
@@ -335,25 +331,15 @@ namespace hkrpg.proxy
         {
             bool showLogs = enableLogsCheckBox.Checked;
 
-            var logLabel = Controls.Cast<Control>()
-                .FirstOrDefault(c => c is Label && c.Text == "Connection Log:");
-            if (logLabel != null)
-            {
-                logLabel.Visible = showLogs;
-            }
-
+            logLabel.Visible = showLogs;
             logBox.Visible = showLogs;
 
             if (showLogs)
             {
-                this.MinimumSize = new Size(500, 450);
-                this.Size = new Size(500, 450);
                 Log("Connection logging enabled");
             }
             else
             {
-                this.Size = new Size(500, 300);
-                this.MinimumSize = new Size(500, 300);
                 logBox.Clear();
             }
         }
@@ -570,10 +556,10 @@ namespace hkrpg.proxy
         {
             StopServer();
             base.OnFormClosing(e);
-            
+
             _processCheckTimer?.Stop();
             _processCheckTimer?.Dispose();
-            
+
             if (_gameProcess != null)
             {
                 try
@@ -593,6 +579,16 @@ namespace hkrpg.proxy
                 }
                 catch { }
             }
+        }
+
+        private void logBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Launcher_Load(object sender, EventArgs e)
+        {
+
         }
     }
 } 
