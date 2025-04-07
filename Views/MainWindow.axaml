@@ -61,7 +61,7 @@
 		<StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10" Spacing="10">
 			<Button Content="Launch" Width="110" Command="{Binding LaunchGameCommand}" IsEnabled="{Binding !IsGameRunning}"/>
 			<Button Content="Stop" Width="110" Command="{Binding StopGameCommand}" IsEnabled="{Binding IsGameRunning}"/>
-			<Button Content="{Binding ServerButtonText}" Margin="55,0,0,0" Width="175" Command="{Binding StartServerCommand}"/>
+			<Button Content="{Binding ServerButtonText}" Margin="55,0,0,0" Width="175" Command="{Binding StartServerCommand}" IsVisible="{Binding UseLocalhost}"/>
 		</StackPanel>
 
 		<!-- Status Text -->
