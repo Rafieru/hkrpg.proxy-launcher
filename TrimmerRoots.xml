@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <!-- Preserve minimal Avalonia types -->
+  <assembly fullname="Avalonia.Base">
+    <type fullname="Avalonia.Application" preserve="all" />
+    <type fullname="Avalonia.Controls.ApplicationLifetimes.*" preserve="all" />
+    <type fullname="Avalonia.Data.BindingOperations" preserve="all" />
+    <type fullname="Avalonia.LogicalTree.*" preserve="fields" />
+  </assembly>
+  
+  <assembly fullname="Avalonia.Controls">
+    <type fullname="Avalonia.Controls.Window" preserve="all" />
+    <type fullname="Avalonia.Controls.Button" preserve="all" />
+    <type fullname="Avalonia.Controls.TextBox" preserve="all" />
+    <type fullname="Avalonia.Controls.CheckBox" preserve="all" />
+    <type fullname="Avalonia.Controls.Grid" preserve="all" />
+    <type fullname="Avalonia.Controls.StackPanel" preserve="all" />
+  </assembly>
+  
+  <assembly fullname="Avalonia.Themes.Fluent">
+    <type fullname="Avalonia.Themes.Fluent.FluentTheme" preserve="all" />
+  </assembly>
+  
+  <assembly fullname="Avalonia.Styling">
+    <type fullname="Avalonia.Styling.Styles" preserve="all" />
+  </assembly>
+  
+  <!-- Preserve only necessary proxy types -->
+  <assembly fullname="Unobtanium.Web.Proxy">
+    <type fullname="Titanium.Web.Proxy.ProxyServer" preserve="all" />
+    <type fullname="Titanium.Web.Proxy.CertificateManager" preserve="all" />
+    <type fullname="Titanium.Web.Proxy.EventArguments.*" preserve="all" />
+    <type fullname="Titanium.Web.Proxy.Models.ExplicitProxyEndPoint" preserve="all" />
+  </assembly>
+  
+  <!-- Preserve minimal MVVM toolkit -->
+  <assembly fullname="CommunityToolkit.Mvvm">
+    <type fullname="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" preserve="all" />
+    <type fullname="CommunityToolkit.Mvvm.Input.RelayCommand" preserve="all" />
+    <type fullname="CommunityToolkit.Mvvm.ComponentModel.ObservableProperty*" preserve="all" />
+  </assembly>
+  
+  <!-- System assemblies - preserve minimal types -->
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.Threading.Thread" preserve="all" />
+    <type fullname="System.Net.IPAddress" preserve="all" />
+    <type fullname="System.IO.File" preserve="all" />
+    <type fullname="System.IO.Path" preserve="all" />
+    <type fullname="System.Security.Cryptography.X509Certificates.*Certificate*" preserve="all" />
+  </assembly>
+
+  <!-- Main application assembly - preserve ViewModels and Views -->
+  <assembly fullname="HkrpgProxy.Launcher">
+    <type fullname="HkrpgProxy.Avalonia.ViewModels.*ViewModel*" preserve="all" />
+    <type fullname="HkrpgProxy.Avalonia.Views.*Window*" preserve="all" />
+    <type fullname="HkrpgProxy.Avalonia.App" preserve="all" />
+    <type fullname="HkrpgProxy.Avalonia.Program" preserve="all" />
+  </assembly>
+  
+  <!-- Core proxy functionality -->
+  <assembly fullname="HkrpgProxy.Core">
+    <type fullname="HkrpgProxy.Core.ProxyService" preserve="all" />
+    <type fullname="HkrpgProxy.Core.ProxyConfig" preserve="all" />
+  </assembly>
+</linker> 

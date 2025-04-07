@@ -1,5 +1,19 @@
 <Project>
   <PropertyGroup>
+    <!-- Optimize for size -->
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    
+    <!-- Reduce size by removing unnecessary .NET features -->
+    <IncludeAnalyzers>false</IncludeAnalyzers>
+    <IncludeContentInSingleFile>false</IncludeContentInSingleFile>
+    <FeatureSIMD>false</FeatureSIMD>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  
+  <!-- Trim even more in Release mode -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>

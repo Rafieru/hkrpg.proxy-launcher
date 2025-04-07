@@ -1,31 +1,18 @@
-# HKRPG Proxy
+# HKRPG Proxy-Launcher
 
-A proxy tool for Anime Game with a simple Windows Forms interface. Inspired by [Cultivation: Thorny Edition](https://github.com/Grasscutters/Cultivation)
+A proxy tool for Anime Game with a simple Avalonia UI interface. Inspired by [Cultivation: Thorny Edition](https://github.com/Grasscutters/Cultivation)
 
 ![HKRPG Proxy Interface](https://i.imgur.com/YVoSFAX.png)
 
 ## Features
 
-- 🔧 Easy-to-use graphical interface
+- 🔧 Easy-to-use modern graphical interface with Avalonia UI
 - 🌐 Proxy configuration with IP and port settings
 - 🖥️ Localhost mode for local development
-- 📜 Connection logging (toggle on/off)
+- 📜 Connection logging with different log levels (debug, info, warning, error)
 - 🎮 Game process monitoring and management
 - 🚀 Automatic proxy startup and shutdown
-
-## Prerequisites
-
-Before using this application, you need to have .NET 8.0 Runtime installed on your system. If you don't have it installed:
-
-1. Download the .NET 8.0 Runtime from the official Microsoft website:
-   - [.NET 8.0 Runtime Download](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-2. Run the installer and follow the installation instructions
-3. Restart your computer if prompted
-
-You can verify your .NET installation by opening a command prompt and typing:
-```bash
-dotnet --list-runtimes
-```
+- 🔒 Self-contained application (no dependencies needed)
 
 ## Installation
 
@@ -89,24 +76,29 @@ dotnet publish -c Release -r win-x64
 - **SSL/TLS Support**: Automatic handling of HTTPS connections
 - **Process Monitoring**: Automatic proxy shutdown when game exits
 
-## Development
+## Technical Details
 
-The project uses the following main dependencies:
+The project uses the following main technologies:
 - Unobtanium.Web.Proxy for proxy functionality
-- Windows Forms for the user interface
+- Avalonia UI for the cross-platform user interface
 - .NET 8.0 framework
+- MVVM architecture with CommunityToolkit.Mvvm
+
+### Optimizations
+
+The application has been optimized for minimal file size while maintaining full functionality:
+- Full trimming enabled to remove unused code
+- Compressed single-file deployment
+- Disabled unnecessary .NET features
+- Optimized for size with ILLink trimming
+- Includes only the essential assemblies needed for operation
 
 ### Project Structure
 
-- `Launcher.cs`: Main application window and UI logic
-- `ProxyService.cs`: Core proxy functionality
-- `ProxyConfig.cs`: Configuration and domain/URL filtering
-
-To contribute:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+- `ViewModels/`: MVVM pattern view models
+- `Views/`: Avalonia UI views
+- `src/HkrpgProxy.Core/`: Core proxy functionality
+- `Models/`: Data models and configurations
 
 ## Troubleshooting
 
@@ -115,7 +107,6 @@ To contribute:
 - Check the connection logs for detailed error messages
 - Verify that the game path is correctly set
 - If SSL/TLS issues occur, check the certificate handling
-- If you see a ".NET Runtime not found" error, install the .NET 8.0 Runtime as described in the Prerequisites section
 - For localhost users: Ensure server files are in the same directory as the launcher
 - For localhost users: Start the server before launching the game
 
@@ -126,4 +117,6 @@ This project is licensed under the terms of the [LICENSE](LICENSE) file in the r
 ## Acknowledgments
 
 - [Unobtanium.Web.Proxy](https://github.com/svrooij/Unobtanium.Web.Proxy) for the proxy functionality
+- [Avalonia UI](https://avaloniaui.net/) for the cross-platform UI framework
+- [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) for the MVVM implementation
 - [FireflySR.Tool.Proxy](https://git.xeondev.com/YYHEggEgg/FireflySR.Tool.Proxy) for the codebase

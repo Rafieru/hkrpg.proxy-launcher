@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace HkrpgProxy.Launcher
+namespace HkrpgProxy.Avalonia.Models
 {
     public class IniFile
     {

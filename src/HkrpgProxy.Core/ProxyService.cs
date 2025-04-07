@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Titanium.Web.Proxy;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Models;
+using Microsoft.Win32;
 
 namespace HkrpgProxy.Core;
 
@@ -22,7 +23,7 @@ public class ProxyService
     {
         _conf = conf;
         _webProxyServer = new ProxyServer();
-        _webProxyServer.CertificateManager.EnsureRootCertificate();
+        _webProxyServer.CertificateManager.EnsureRootCertificateAsync();
 
         _webProxyServer.BeforeRequest += BeforeRequest;
         _webProxyServer.ServerCertificateValidationCallback += OnCertValidation;
@@ -64,6 +65,7 @@ public class ProxyService
             {
                 try
                 {
+                    // Always try to clear system proxy settings, even if proxy server is stopped
                     _webProxyServer.DisableSystemHttpProxy();
                     _webProxyServer.DisableSystemHttpsProxy();
                     Console.WriteLine("System proxy settings cleared");
@@ -71,11 +73,35 @@ public class ProxyService
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to clear system proxy: {ex.Message}");
+                    // Try alternative method to clear proxy settings
+                    try
+                    {
+                        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Internet Settings", true))
+                        {
+                            if (key != null)
+                            {
+                                key.SetValue("ProxyEnable", 0);
+                                key.SetValue("ProxyServer", "");
+                                Console.WriteLine("System proxy settings cleared via registry");
+                            }
+                        }
+                    }
+                    catch (Exception regEx)
+                    {
+                        Console.WriteLine($"Failed to clear system proxy via registry: {regEx.Message}");
+                    }
                 }
             }
 
-            _webProxyServer.Stop();
-            _webProxyServer.Dispose();
+            try
+            {
+                _webProxyServer.Stop();
+                _webProxyServer.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error stopping proxy server: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
