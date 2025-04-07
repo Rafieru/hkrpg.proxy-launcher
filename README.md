@@ -2,7 +2,7 @@
 
 A proxy tool for Anime Game with a simple Avalonia UI interface. Inspired by [Cultivation: Thorny Edition](https://github.com/Grasscutters/Cultivation)
 
-![HKRPG Proxy Interface](https://i.imgur.com/YVoSFAX.png)
+![HKRPG Proxy Interface](https://i.imgur.com/tVEtr2K.png)
 
 ## Features
 
