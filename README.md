@@ -34,7 +34,7 @@ dotnet --list-runtimes
 1. Go to the [Releases](https://github.com/Rafieru/hkrpg.proxy-launcher/releases) page
 2. Download the latest release zip file
 3. Extract the zip file to your preferred location
-4. Run `hkrpg.proxy-launcher.exe`
+4. Run `HkrpgProxy.Launcher.exe`
 
 ### Option 2: Build from Source
 
@@ -54,12 +54,7 @@ cd hkrpg-proxy
 
 2. Build the project:
 ```bash
-dotnet build
-```
-
-3. Run the application:
-```bash
-dotnet run
+dotnet publish -c Release -r win-x64
 ```
 
 ## Usage
