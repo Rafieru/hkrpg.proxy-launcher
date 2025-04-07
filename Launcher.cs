@@ -55,7 +55,7 @@ namespace HkrpgProxy.Launcher
         private Process? _serverProcess;
         private Process? _sdkServerProcess;
         private ProxyService? proxyService;
-        private string lastIpAddress = "127.0.0.1";
+        private string lastIpAddress = ""; // Default empty custom destination host
         private IniFile _config;
 
         public Launcher()
@@ -77,9 +77,23 @@ namespace HkrpgProxy.Launcher
 
         private void InitializeProxy()
         {
+            string destinationHost;
+            
+            if (localhostCheckBox.Checked)
+            {
+                destinationHost = "127.0.0.1";
+            }
+            else
+            {
+                // Get the host from the ipBox text directly when not using localhost
+                destinationHost = string.IsNullOrWhiteSpace(ipBox.Text) || ipBox.Text == "Localhost" 
+                    ? "127.0.0.1" 
+                    : ipBox.Text;
+            }
+            
             var config = new HkrpgProxy.Core.ProxyConfig
             {
-                DestinationHost = Settings.Default.DestinationHost,
+                DestinationHost = destinationHost,
                 DestinationPort = Settings.Default.DestinationPort,
                 ProxyBindPort = 8080
             };
@@ -87,14 +101,58 @@ namespace HkrpgProxy.Launcher
             proxyService = new ProxyService(config.DestinationHost, config.DestinationPort, config);
             proxyService.ProxyServer.BeforeRequest += OnBeforeRequest;
             proxyService.ProxyServer.ServerCertificateValidationCallback += OnCertificateValidationAsync;
-            Log("Proxy initialized", LogLevel.INFO);
+            Log($"Proxy initialized with destination: {destinationHost}:{Settings.Default.DestinationPort}", LogLevel.INFO);
         }
 
         private void LoadSettings()
         {
             // Load settings from INI file
             gamePathBox.Text = _config.Read("Settings", "GamePath", "");
-            ipBox.Text = _config.Read("Settings", "DestinationHost", "127.0.0.1");
+            
+            // Load UseLocalhost setting (default to True)
+            string useLocalhostStr = _config.Read("Settings", "UseLocalhost", "True");
+            bool useLocalhost = useLocalhostStr.Equals("True", StringComparison.OrdinalIgnoreCase);
+            
+            // Load CustomDestinationHost setting
+            string customHost = _config.Read("Settings", "CustomDestinationHost", "");
+            
+            // If we have a custom host, store it in lastIpAddress
+            if (!string.IsNullOrWhiteSpace(customHost))
+            {
+                lastIpAddress = customHost;
+            }
+            
+            // Set the checkbox state after we've loaded the custom host
+            localhostCheckBox.Checked = useLocalhost;
+            
+            // Set the ipBox text based on UseLocalhost
+            if (useLocalhost)
+            {
+                ipBox.Text = "Localhost";
+                Settings.Default.DestinationHost = "127.0.0.1";
+            }
+            else
+            {
+                // Use the custom host if we have one
+                if (!string.IsNullOrWhiteSpace(customHost))
+                {
+                    ipBox.Text = customHost;
+                    Settings.Default.DestinationHost = customHost;
+                }
+                // Otherwise use 127.0.0.1 as a fallback 
+                else
+                {
+                    ipBox.Text = "127.0.0.1";
+                    Settings.Default.DestinationHost = "127.0.0.1";
+                    
+                    // Also update lastIpAddress if it's still empty
+                    if (string.IsNullOrWhiteSpace(lastIpAddress))
+                    {
+                        lastIpAddress = "127.0.0.1";
+                    }
+                }
+            }
+            
             portBox.Text = _config.Read("Settings", "DestinationPort", "21000");
 
             UpdateIpBoxState();
@@ -103,16 +161,40 @@ namespace HkrpgProxy.Launcher
             // Hide debug logs checkbox by default
             enableDebugLogsCheckBox.Visible = false;
             enableDebugLogsCheckBox.Checked = false;
+            
+            // Log the loaded settings
+            Log($"Loaded settings - UseLocalhost: {useLocalhost}, " +
+                $"CustomHost: {(string.IsNullOrWhiteSpace(customHost) ? "(empty)" : customHost)}, " +
+                $"Port: {portBox.Text}", LogLevel.DEBUG);
         }
 
         private void SaveSettings(bool logSave = true)
         {
             try
             {
+                // Save to INI file
                 _config.Write("Settings", "GamePath", gamePathBox.Text);
-                _config.Write("Settings", "DestinationHost", ipBox.Text);
+                _config.Write("Settings", "UseLocalhost", localhostCheckBox.Checked ? "True" : "False");
                 _config.Write("Settings", "DestinationPort", portBox.Text);
-
+                
+                // Only update CustomDestinationHost when not using localhost
+                // and when there's a value different from "Localhost" to save
+                if (!localhostCheckBox.Checked && 
+                    !string.IsNullOrWhiteSpace(ipBox.Text) && 
+                    ipBox.Text != "Localhost")
+                {
+                    _config.Write("Settings", "CustomDestinationHost", ipBox.Text);
+                }
+                // Don't touch CustomDestinationHost when toggling localhost - preserve the value
+                
+                // Make sure the application settings are also saved
+                Settings.Default.GamePath = gamePathBox.Text;
+                if (int.TryParse(portBox.Text, out int port))
+                {
+                    Settings.Default.DestinationPort = port;
+                }
+                Settings.Default.Save();
+                
                 if (logSave)
                 {
                     Log("Settings saved", LogLevel.INFO);
@@ -448,21 +530,34 @@ namespace HkrpgProxy.Launcher
         {
             if (!localhostCheckBox.Checked)
             {
-                lastIpAddress = ipBox.Text;
-                Settings.Default.DestinationHost = ipBox.Text;
-            }
-
-            if (int.TryParse(portBox.Text, out int port))
-            {
-                Settings.Default.DestinationPort = port;
+                // Only update if there's actually a value to save
+                if (!string.IsNullOrWhiteSpace(ipBox.Text) && ipBox.Text != "Localhost")
+                {
+                    // Update lastIpAddress with the current value in the ipBox
+                    lastIpAddress = ipBox.Text;
+                    
+                    // Update the destination host setting
+                    Settings.Default.DestinationHost = ipBox.Text;
+                    
+                    // Make sure to explicitly save the CustomDestinationHost
+                    _config.Write("Settings", "CustomDestinationHost", ipBox.Text);
+                }
             }
             else
+            {
+                // When localhost is checked, ensure destination is 127.0.0.1
+                Settings.Default.DestinationHost = "127.0.0.1";
+            }
+
+            // Validate port format
+            if (!int.TryParse(portBox.Text, out int port))
             {
                 MessageBox.Show("Please enter a valid port number.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             SaveSettings();
+            Log($"Settings saved. Host: {(localhostCheckBox.Checked ? "127.0.0.1" : ipBox.Text)}, Port: {port}", LogLevel.INFO);
         }
 
         private void StartServerButton_Click(object? sender, EventArgs e)
@@ -481,22 +576,48 @@ namespace HkrpgProxy.Launcher
         {
             if (localhostCheckBox.Checked)
             {
-                lastIpAddress = ipBox.Text;
+                // Store the current IP address before changing to localhost
+                // Only store it if it's not empty and not "Localhost"
+                if (!string.IsNullOrWhiteSpace(ipBox.Text) && ipBox.Text != "Localhost")
+                {
+                    lastIpAddress = ipBox.Text;
+                }
+                
+                // Set UI to show "Localhost"
                 ipBox.Text = "Localhost";
+                
+                // Set destination to 127.0.0.1
                 Settings.Default.DestinationHost = "127.0.0.1";
+                
+                // Save settings with UseLocalhost=True
+                // Don't modify CustomDestinationHost in the INI file
                 SaveSettings();
             }
             else
             {
+                // Stop the server if it's running
                 if (_serverProcess != null && !_serverProcess.HasExited)
                 {
                     StopServer();
                 }
 
-                ipBox.Text = lastIpAddress;
-                Settings.Default.DestinationHost = lastIpAddress;
+                // If we have a saved lastIpAddress, use it
+                if (!string.IsNullOrWhiteSpace(lastIpAddress))
+                {
+                    ipBox.Text = lastIpAddress;
+                    Settings.Default.DestinationHost = lastIpAddress;
+                }
+                else
+                {
+                    // Otherwise use 127.0.0.1 as default
+                    ipBox.Text = "127.0.0.1";
+                    Settings.Default.DestinationHost = "127.0.0.1";
+                }
+                
+                // Save settings with UseLocalhost=False
                 SaveSettings();
             }
+            
             UpdateIpBoxState();
             UpdateServerVisibility();
         }
