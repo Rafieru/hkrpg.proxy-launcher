@@ -7,7 +7,9 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>sw.ico</ApplicationIcon>
-    <AssemblyName>hkrpg.proxy-launcher</AssemblyName>
+    <AssemblyName>HkrpgProxy.Launcher</AssemblyName>
+    <RootNamespace>HkrpgProxy.Launcher</RootNamespace>
+    <NoWarn>CA1416;CS0436</NoWarn>
     
     <!-- Publishing settings for portable single-file -->
     <PublishSingleFile>true</PublishSingleFile>
@@ -17,19 +19,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Unobtanium.Web.Proxy" Version="0.1.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="sw.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
-  <PropertyGroup>
-    <RestoreAdditionalProjectSources>
-      https://nuget.pkg.github.com/svrooij/index.json
-    </RestoreAdditionalProjectSources>
-  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="src\HkrpgProxy.Core\HkrpgProxy.Core.csproj" />
+  </ItemGroup>
 
 </Project>

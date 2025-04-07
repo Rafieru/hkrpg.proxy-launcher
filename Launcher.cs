@@ -9,13 +9,48 @@ using System.Configuration;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using Titanium.Web.Proxy.EventArguments;
-using hkrpg.proxy.Properties;
+using HkrpgProxy.Launcher.Properties;
 using Titanium.Web.Proxy;
+using HkrpgProxy.Core;
+using System.Runtime.InteropServices;
 
-namespace hkrpg.proxy
+namespace HkrpgProxy.Launcher
 {
     public partial class Launcher : Form
     {
+        private const int WM_QUERYENDSESSION = 0x0011;
+        private const int WM_ENDSESSION = 0x0016;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr DefWindowProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_QUERYENDSESSION || m.Msg == WM_ENDSESSION)
+            {
+                CleanupProxy();
+            }
+            base.WndProc(ref m);
+        }
+
+        private void CleanupProxy()
+        {
+            if (proxyService != null)
+            {
+                try
+                {
+                    proxyService.ProxyServer.BeforeRequest -= OnBeforeRequest;
+                    proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidationAsync;
+                    proxyService.Shutdown();
+                    proxyService = null;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during proxy cleanup: {ex.Message}");
+                }
+            }
+        }
+
         private Process? _gameProcess;
         private Process? _serverProcess;
         private Process? _sdkServerProcess;
@@ -42,7 +77,7 @@ namespace hkrpg.proxy
 
         private void InitializeProxy()
         {
-            var config = new ProxyConfig
+            var config = new HkrpgProxy.Core.ProxyConfig
             {
                 DestinationHost = Settings.Default.DestinationHost,
                 DestinationPort = Settings.Default.DestinationPort,
@@ -817,16 +852,7 @@ namespace hkrpg.proxy
                 catch { }
             }
 
-            if (proxyService != null)
-            {
-                try
-                {
-                    proxyService.ProxyServer.BeforeRequest -= OnBeforeRequest;
-                    proxyService.ProxyServer.ServerCertificateValidationCallback -= OnCertificateValidationAsync;
-                    proxyService.Shutdown();
-                }
-                catch { }
-            }
+            CleanupProxy();
         }
 
         private void logBox_TextChanged(object sender, EventArgs e)

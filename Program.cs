@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace hkrpg.proxy
+namespace HkrpgProxy.Launcher
 {
     internal static class Program
     {

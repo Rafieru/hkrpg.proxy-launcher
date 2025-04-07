@@ -2,7 +2,11 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hkrpg-proxy", "hkrpg-proxy.csproj", "{C9867CEA-1659-4AC3-8590-7FD72A8867D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HkrpgProxy.Launcher", "hkrpg-proxy.csproj", "{A6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HkrpgProxy.Core", "src\HkrpgProxy.Core\HkrpgProxy.Core.csproj", "{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +14,19 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C9867CEA-1659-4AC3-8590-7FD72A8867D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C9867CEA-1659-4AC3-8590-7FD72A8867D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C9867CEA-1659-4AC3-8590-7FD72A8867D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C9867CEA-1659-4AC3-8590-7FD72A8867D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E9867CEA-1659-4AC3-8590-7FD72A8867D8}
+	GlobalSection(NestedProjects) = preSolution
+		{C6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B} = {B6F5D6D1-4F5A-4B7A-8C1A-8C9B9B9B9B9B}
 	EndGlobalSection
 EndGlobal

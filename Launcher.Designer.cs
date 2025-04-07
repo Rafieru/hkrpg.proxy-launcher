@@ -1,4 +1,4 @@
-namespace hkrpg.proxy
+namespace HkrpgProxy.Launcher
 {
     partial class Launcher
     {

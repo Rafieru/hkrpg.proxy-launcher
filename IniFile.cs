@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace hkrpg.proxy
+namespace HkrpgProxy.Launcher
 {
     public class IniFile
     {

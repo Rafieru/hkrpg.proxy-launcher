@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace hkrpg.proxy;
+namespace HkrpgProxy.Core;
 
 public class ProxyConfig
 {
@@ -81,4 +81,4 @@ public class ProxyConfig
             listener.Stop();
         }
     }
-}
+} 
