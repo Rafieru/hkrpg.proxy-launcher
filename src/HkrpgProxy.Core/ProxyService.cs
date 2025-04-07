@@ -40,7 +40,7 @@ public class ProxyService
         explicitEP.BeforeTunnelConnectRequest += BeforeTunnelConnectRequest;
 
         _webProxyServer.AddEndPoint(explicitEP);
-        _webProxyServer.Start();
+        _webProxyServer.StartAsync();
 
         if (OperatingSystem.IsWindows())
         {

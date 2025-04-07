@@ -3,121 +3,198 @@
         xmlns:vm="using:HkrpgProxy.Avalonia.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="700"
         x:Class="HkrpgProxy.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/sw.ico"
         Title="HKRPG.Proxy Launcher"
         MinWidth="500"
-        MinHeight="450"
+        MinHeight="700"
+        MaxWidth="500"
+        MaxHeight="700"
         Width="500"
-        Height="450"
-        WindowStartupLocation="CenterScreen">
+        Height="700"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8F9FA">
 
-	<Grid Margin="10">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+	<Window.Styles>
+		<Style Selector="Button">
+			<Setter Property="Background" Value="#0078F0"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Padding" Value="20,12"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="FontSize" Value="16"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Button.secondary">
+			<Setter Property="Background" Value="#FF9500"/>
+		</Style>
+		<Style Selector="Button:disabled">
+			<Setter Property="Background" Value="#E0E0E0"/>
+			<Setter Property="Foreground" Value="#999999"/>
+		</Style>
+		<Style Selector="Button:hover">
+			<Setter Property="Background" Value="#0066CC"/>
+		</Style>
+		<Style Selector="Button.secondary:hover">
+			<Setter Property="Background" Value="#F08500"/>
+		</Style>
+		<Style Selector="TextBox">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#E0E0E0"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Padding" Value="12,8"/>
+			<Setter Property="FontSize" Value="16"/>
+		</Style>
+		<Style Selector="CheckBox">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#0078F0"/>
+			<Setter Property="BorderThickness" Value="2"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8,4"/>
+			<Setter Property="FontSize" Value="16"/>
+		</Style>
+		<Style Selector="TextBlock.header">
+			<Setter Property="FontSize" Value="24"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Margin" Value="0,0,0,16"/>
+		</Style>
+		<Style Selector="Border.card">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#E0E0E0"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="12"/>
+			<Setter Property="Padding" Value="20"/>
+			<Setter Property="Margin" Value="0,0,0,24"/>
+		</Style>
+	</Window.Styles>
 
-		<!-- Game Path -->
-		<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-			<TextBlock Text="Game Path:" VerticalAlignment="Center" Width="80"/>
-			<TextBox Name="GamePathTextBox"
-					Text="{Binding GamePath}"
-					Width="300" 
-					Margin="0,0,10,0" 
-					IsEnabled="{Binding !IsProxyRunning}"/>
-			<Button Content="Browse" 
-					Width="80" 
-					Click="BrowseButton_Click" 
-					IsEnabled="{Binding !IsProxyRunning}"/>
-		</StackPanel>
+	<StackPanel Margin="32">
+		<!-- Game Configuration Section -->
+		<TextBlock Text="Game Configuration" Classes="header" Margin="0,-15,0,0"/>
+		<Border Classes="card">
+			<StackPanel>
+				<TextBox Name="GamePathTextBox"
+						Text="{Binding GamePath}"
+						Watermark="Game Path"
+						Margin="0,0,0,10"
+						IsEnabled="{Binding !IsProxyRunning}"/>
+				<Grid>
+					<CheckBox Content="Use Localhost (127.0.0.1)"
+							 IsChecked="{Binding UseLocalhost, Mode=TwoWay}"
+							 IsEnabled="{Binding !IsProxyRunning}"/>
+					<Button Content="Browse"
+							Width="120"
+							HorizontalAlignment="Right"
+							Click="BrowseButton_Click"
+							IsEnabled="{Binding !IsProxyRunning}"/>
+				</Grid>
+			</StackPanel>
+		</Border>
 
-		<!-- Use Localhost Checkbox -->
-		<CheckBox Grid.Row="1" Content="Use Localhost (127.0.0.1)" IsChecked="{Binding UseLocalhost, Mode=TwoWay}" Margin="0,0,0,10" IsEnabled="{Binding !IsProxyRunning}"/>
-
-		<!-- IP and Port -->
-		<Grid Grid.Row="2" Margin="0,0,10,10">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="100"/>
-				<ColumnDefinition Width="Auto"/>
-			</Grid.ColumnDefinitions>
-			<TextBlock Text="IP Address:" VerticalAlignment="Center" Width="90"/>
-			<TextBox Grid.Column="1" Text="{Binding IpAddress, Mode=TwoWay}" IsEnabled="{Binding IsIpAddressEnabled}" Margin="0,0,20,0"/>
-			<TextBlock Grid.Column="2" Text="Port:" VerticalAlignment="Center"/>
-			<TextBox Grid.Column="3" Text="{Binding Port, Mode=TwoWay}" Margin="5,0,5,0" IsEnabled="{Binding !IsProxyRunning}"/>
-			<Button Grid.Column="4" Content="Save" Width="80" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding !IsProxyRunning}"/>
-		</Grid>
+		<!-- Network Settings Section -->
+		<TextBlock Text="Network Settings" Classes="header" Margin="0,-10,0,0"/>
+		<Border Classes="card">
+			<StackPanel>
+				<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="0,0,0,0">
+					<TextBlock Text="IP Address:" VerticalAlignment="Center" Margin="0,0,12,12"/>
+					<TextBox Grid.Column="1"
+							 Text="{Binding IpAddress, Mode=TwoWay}"
+							 IsEnabled="{Binding IsIpAddressEnabled}"
+							 Margin="0,0,0,12"/>
+					<TextBlock Grid.Row="1" Text="Port:" VerticalAlignment="Center" Margin="0,0,12,0"/>
+					<Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto">
+						<TextBox Text="{Binding Port, Mode=TwoWay}"
+								 IsEnabled="{Binding !IsProxyRunning}"
+								 Margin="0,0,12,0"
+								 VerticalAlignment="Center"/>
+						<Button Grid.Column="1"
+								Content="Save"
+								Width="120"
+								Command="{Binding SaveSettingsCommand}"
+								IsEnabled="{Binding !IsProxyRunning}"/>
+					</Grid>
+				</Grid>
+			</StackPanel>
+		</Border>
 
 		<!-- Control Buttons -->
-		<StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10" Spacing="10">
-			<Button Content="Launch" Width="110" Command="{Binding LaunchGameCommand}" IsEnabled="{Binding !IsGameRunning}"/>
-			<Button Content="Stop" Width="110" Command="{Binding StopGameCommand}" IsEnabled="{Binding IsGameRunning}"/>
-			<Button Content="{Binding ServerButtonText}" Margin="55,0,0,0" Width="175" Command="{Binding StartServerCommand}" IsVisible="{Binding UseLocalhost}"/>
-		</StackPanel>
-
-		<!-- Status Text -->
-		<TextBlock Grid.Row="4" Text="{Binding Status}" Margin="0,0,0,5"/>
-
-		<!-- Log Options -->
-		<Grid Grid.Row="5">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-			</Grid.RowDefinitions>
-
-			<StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-				<CheckBox Content="Enable Logs" IsChecked="{Binding EnableLogs, Mode=TwoWay}" Margin="0,0,20,0" IsEnabled="{Binding !IsProxyRunning}"/>
-				<CheckBox Content="Show Debug Logs (For Developer)" Foreground="Red" IsChecked="{Binding ShowDebugLogs, Mode=TwoWay}" IsEnabled="{Binding EnableLogs}"/>
-			</StackPanel>
-
-			<ScrollViewer Grid.Row="1" 
-						  IsVisible="{Binding EnableLogs}"
-						  HorizontalScrollBarVisibility="Disabled"
-						  VerticalScrollBarVisibility="Auto">
-				<Border Background="#F5F5F5"
-						BorderBrush="#CCCCCC"
-						BorderThickness="1"
-						CornerRadius="3"
-						Padding="8">
-					<ItemsControl ItemsSource="{Binding LogEntries}">
-						<ItemsControl.ItemTemplate>
-							<DataTemplate>
-								<Border Margin="0,2"
-										Padding="4,2">
-									<StackPanel Orientation="Horizontal">
-										<TextBlock Text="{Binding Timestamp, StringFormat='[{0}]'}" 
-												 FontFamily="Consolas"
-												 FontSize="11.5"
-												 Foreground="#666666"
-												 Margin="0,0,5,0"
-												 IsVisible="True"/>
-										<TextBlock Text="{Binding Level, StringFormat='[{0}]'}" 
-												 Foreground="{Binding Color}"
-												 FontFamily="Consolas"
-												 FontSize="11.5"
-												 FontWeight="SemiBold"
-												 Margin="0,0,5,0"
-												 IsVisible="True"/>
-										<SelectableTextBlock Text="{Binding Message}" 
-												 FontFamily="Consolas"
-												 FontSize="11.5"
-												 TextWrapping="NoWrap"/>
-									</StackPanel>
-								</Border>
-							</DataTemplate>
-						</ItemsControl.ItemTemplate>
-					</ItemsControl>
-				</Border>
-			</ScrollViewer>
+		<Grid ColumnDefinitions="*,*" Margin="0,0,0,24">
+			<Button Content="Launch"
+					Margin="0,-10,6,0"
+					Command="{Binding LaunchGameCommand}"
+					IsEnabled="{Binding !IsGameRunning}"/>
+			<Button Grid.Column="1"
+					Content="{Binding ServerButtonText}"
+					Classes="secondary"
+					Margin="6,-10,0,0"
+					Command="{Binding StartServerCommand}"
+					IsVisible="{Binding UseLocalhost}"/>
 		</Grid>
-	</Grid>
+
+		<!-- Log Section -->
+		<TextBlock Text="Log" Classes="header" Margin="0,-15,0,0"/>
+		<Border Classes="card">
+			<StackPanel>
+				<Grid ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+					<CheckBox Content="Enable Logs"
+							 IsChecked="{Binding EnableLogs, Mode=TwoWay}"
+							 IsEnabled="{Binding !IsProxyRunning}"
+							 Margin="0,0,24,0"
+							 BorderThickness="0"
+							 FontWeight="SemiBold"/>
+					<CheckBox Grid.Column="1"
+							 Content="Show Debug Logs (DEV)"
+							 IsChecked="{Binding ShowDebugLogs, Mode=TwoWay}"
+							 IsEnabled="{Binding EnableLogs}"
+							 BorderThickness="0"
+							 Foreground="Red"
+							 FontWeight="SemiBold"/>
+				</Grid>
+
+				<Border Background="#FAFAFA"
+						BorderBrush="#E0E0E0"
+						BorderThickness="1"
+						CornerRadius="8"
+						Height="150"
+						IsVisible="{Binding EnableLogs}">
+					<ScrollViewer HorizontalScrollBarVisibility="Disabled"
+								VerticalScrollBarVisibility="Auto">
+						<ItemsControl ItemsSource="{Binding LogEntries}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Padding="0" Margin="0,2" Background="#FAFAFA" CornerRadius="4">
+										<StackPanel Orientation="Vertical">
+												<TextBlock Text="{Binding Timestamp, StringFormat='[{0}]'}"
+														FontFamily="Consolas"
+														FontSize="12"
+														Foreground="#666666"
+														Margin="0,0,8,0"/>
+											<WrapPanel>
+												<TextBlock Text="{Binding Level, StringFormat='[{0}]'}"
+														Foreground="{Binding Color}"
+														FontFamily="Consolas"
+														FontSize="12"
+														FontWeight="SemiBold"
+														Margin="0,0,1,0"/>
+											<SelectableTextBlock Text="{Binding Message}"
+													TextWrapping="Wrap"
+													FontFamily="Consolas"
+													FontSize="12"
+													Foreground="Black"
+													Margin="0,0,0,0"/>
+											</WrapPanel>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Border>
+			</StackPanel>
+		</Border>
+	</StackPanel>
 </Window>
