@@ -22,6 +22,7 @@ namespace HkrpgProxy.Avalonia.ViewModels
         private Process? _serverProcess;
         private Process? _sdkServerProcess;
         private System.Timers.Timer? _processCheckTimer;
+        private bool IsInExitedEventHandler = false;
 
         public enum LogLevel
         {
@@ -182,7 +183,7 @@ namespace HkrpgProxy.Avalonia.ViewModels
                 _proxyService.ProxyServer.ServerCertificateValidationCallback += OnCertificateValidation;
 
                 UpdateUIState(true);
-                Log("Proxy initialized", LogLevel.INFO);
+                Log($"Proxy initialized with destination: {(UseLocalhost ? "127.0.0.1" : IpAddress)}:{Port}", LogLevel.INFO);
             }
             catch (Exception ex)
             {
@@ -692,6 +693,7 @@ namespace HkrpgProxy.Avalonia.ViewModels
                 {
                     _serverProcess.Kill();
                     _serverProcess.WaitForExit();
+                    Log("Server process exited", LogLevel.INFO);
                 }
 
                 if (_sdkServerProcess != null && !_sdkServerProcess.HasExited)
@@ -705,7 +707,12 @@ namespace HkrpgProxy.Avalonia.ViewModels
                 IsServerRunning = false;
                 OnPropertyChanged(nameof(ServerButtonText));
                 Status = "Server stopped";
-                Log("All server processes stopped", LogLevel.INFO);
+                
+                // Only log this if we're not already inside the ServerProcess_Exited handler
+                if (!IsInExitedEventHandler)
+                {
+                    Log("All server processes stopped", LogLevel.INFO);
+                }
             }
             catch (Exception ex)
             {
@@ -718,8 +725,9 @@ namespace HkrpgProxy.Avalonia.ViewModels
         {
             if (sender is Process process && process == _serverProcess)
             {
+                IsInExitedEventHandler = true;
                 StopServer();
-                Log("Server process exited", LogLevel.INFO);
+                IsInExitedEventHandler = false;
             }
         }
 
@@ -799,8 +807,9 @@ namespace HkrpgProxy.Avalonia.ViewModels
 
                 if (logSave)
                 {
-                    Status = "Settings saved";
-                    Log("Settings saved", LogLevel.INFO);
+                    string hostInfo = UseLocalhost ? "127.0.0.1" : IpAddress;
+                    Status = $"Settings saved. Host: {hostInfo}, Port: {Port}";
+                    Log($"Settings saved. Host: {hostInfo}, Port: {Port}", LogLevel.INFO);
                 }
             }
             catch (Exception ex)

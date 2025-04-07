@@ -96,16 +96,21 @@
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Timestamp, StringFormat='[{0}]'}" 
 												 FontFamily="Consolas"
+												 FontSize="11.5"
 												 Foreground="#666666"
-												 Margin="0,0,5,0"/>
+												 Margin="0,0,5,0"
+												 IsVisible="True"/>
 										<TextBlock Text="{Binding Level, StringFormat='[{0}]'}" 
 												 Foreground="{Binding Color}"
 												 FontFamily="Consolas"
+												 FontSize="11.5"
 												 FontWeight="SemiBold"
-												 Margin="0,0,5,0"/>
-										<TextBlock Text="{Binding Message}" 
+												 Margin="0,0,5,0"
+												 IsVisible="True"/>
+										<SelectableTextBlock Text="{Binding Message}" 
 												 FontFamily="Consolas"
-												 TextWrapping="Wrap"/>
+												 FontSize="11.5"
+												 TextWrapping="NoWrap"/>
 									</StackPanel>
 								</Border>
 							</DataTemplate>
