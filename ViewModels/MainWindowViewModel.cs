@@ -94,7 +94,7 @@ namespace HkrpgProxy.Avalonia.ViewModels
         public MainWindowViewModel()
         {
             _useLocalhost = true; // Set initial value before anything else
-            var configPath = Path.Combine(AppContext.BaseDirectory, "launcher.ini");
+            var configPath = Path.Combine(GetExecutableDirectory(), "launcher.ini");
             _config = new IniFile(configPath);
             LoadSettings();
             InitializeProcessCheckTimer();
